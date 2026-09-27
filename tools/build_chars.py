@@ -33,8 +33,8 @@ CHARS = {
    "ripper_held": dict(src="art_src/chars/held/hero_ripper.png", pivot=(90, 290), cuff=(140, 265), wristB=(380, 295), cuffB=(410, 275), muzzle=(560, 185), stock=(95, 200), scale=1.05),
  }),
  "grunt": dict(height=1.8, res=0.6, parts={
-   "head": dict(pivot=(102, 160), top=(80, 8)),
-   "torso": dict(src="art_src/chars/torso_fix/grunt.png", pivot=(140, 350), neck=(140, 40), shoulder=(178, 82), hip=(140, 350)),
+   "head": dict(pivot=(98, 172), top=(80, 8)),
+   "torso": dict(src="art_src/chars/torso_fix/grunt.png", pivot=(140, 350), neck=(158, 58), shoulder=(180, 88), hip=(140, 350)),
    "upperarm": dict(pivot=(55, 52), end=(55, 222), clip=250),
    "forearm": dict(pivot=(35, 65), end=(215, 110)),
    "thigh": dict(pivot=(80, 40), end=(85, 240)),

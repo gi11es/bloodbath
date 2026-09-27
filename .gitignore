@@ -1,0 +1,6 @@
+node_modules
+dist
+.DS_Store
+art_src
+tools/__pycache__
+*.pyc

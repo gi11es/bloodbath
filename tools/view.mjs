@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const [,, query, out, wait = '1500'] = process.argv;
+const browser = await chromium.launch({ headless: true, args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });
+const page = await browser.newPage({ viewport: { width: 1800, height: 1000 } });
+const logs = [];
+page.on('pageerror', (e) => logs.push('pageerror: ' + e.message));
+page.on('console', (m) => { if (m.type() === 'error') logs.push(m.text()); });
+await page.goto('http://localhost:5173/' + query);
+await page.waitForTimeout(Number(wait));
+await page.screenshot({ path: out });
+console.log(logs.join('\n'));
+await browser.close();

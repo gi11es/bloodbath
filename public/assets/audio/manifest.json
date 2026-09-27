@@ -1,0 +1,361 @@
+{
+ "music": {
+  "intro": {
+   "src": "assets/audio/music/intro.mp3",
+   "loop": false,
+   "loopStart": 0,
+   "loopEnd": 69.809,
+   "duration": 69.809
+  },
+  "title": {
+   "src": "assets/audio/music/title.mp3",
+   "loop": true,
+   "loopStart": 23.7308,
+   "loopEnd": 81.3122,
+   "duration": 81.312
+  },
+  "stage1": {
+   "src": "assets/audio/music/stage1.mp3",
+   "loop": true,
+   "loopStart": 6.1765,
+   "loopEnd": 120.1765,
+   "duration": 120.177
+  },
+  "stage2": {
+   "src": "assets/audio/music/stage2.mp3",
+   "loop": true,
+   "loopStart": 12.8639,
+   "loopEnd": 132.0363,
+   "duration": 132.036
+  },
+  "boss": {
+   "src": "assets/audio/music/boss.mp3",
+   "loop": true,
+   "loopStart": 9.3809,
+   "loopEnd": 115.0317,
+   "duration": 115.032
+  },
+  "victory": {
+   "src": "assets/audio/music/victory.mp3",
+   "loop": false,
+   "loopStart": 0,
+   "loopEnd": 15.632,
+   "duration": 15.632
+  },
+  "gameover": {
+   "src": "assets/audio/music/gameover.mp3",
+   "loop": false,
+   "loopStart": 0,
+   "loopEnd": 7.185,
+   "duration": 7.185
+  }
+ },
+ "voice": {
+  "mission_start": {
+   "src": "assets/audio/voice/mission_start.mp3",
+   "duration": 2.437,
+   "text": "Mission... start!"
+  },
+  "mission_complete": {
+   "src": "assets/audio/voice/mission_complete.mp3",
+   "duration": 2.646,
+   "text": "Mission complete!"
+  },
+  "heavy_machine_gun": {
+   "src": "assets/audio/voice/heavy_machine_gun.mp3",
+   "duration": 2.066,
+   "text": "Heavy machine gun!"
+  },
+  "shotgun": {
+   "src": "assets/audio/voice/shotgun.mp3",
+   "duration": 1.485,
+   "text": "Shotgun!"
+  },
+  "ripper": {
+   "src": "assets/audio/voice/ripper.mp3",
+   "duration": 1.369,
+   "text": "Ripper!"
+  },
+  "grenade": {
+   "src": "assets/audio/voice/grenade.mp3",
+   "duration": 1.229,
+   "text": "Grenade!"
+  },
+  "bloodbath": {
+   "src": "assets/audio/voice/bloodbath.mp3",
+   "duration": 1.721,
+   "text": "Bloodbath!"
+  },
+  "excessive": {
+   "src": "assets/audio/voice/excessive.mp3",
+   "duration": 1.625,
+   "text": "Excessive!"
+  },
+  "massacre": {
+   "src": "assets/audio/voice/massacre.mp3",
+   "duration": 1.395,
+   "text": "Massacre!"
+  },
+  "sanguine": {
+   "src": "assets/audio/voice/sanguine.mp3",
+   "duration": 1.542,
+   "text": "Sanguine!"
+  },
+  "frenzy": {
+   "src": "assets/audio/voice/frenzy.mp3",
+   "duration": 1.169,
+   "text": "Frenzy!"
+  },
+  "execution": {
+   "src": "assets/audio/voice/execution.mp3",
+   "duration": 1.381,
+   "text": "Execution!"
+  },
+  "double_kill": {
+   "src": "assets/audio/voice/double_kill.mp3",
+   "duration": 1.49,
+   "text": "Double kill!"
+  },
+  "multi_kill": {
+   "src": "assets/audio/voice/multi_kill.mp3",
+   "duration": 2.504,
+   "text": "Multi kill!"
+  },
+  "okay": {
+   "src": "assets/audio/voice/okay.mp3",
+   "duration": 1.538,
+   "text": "Okay!"
+  },
+  "continue": {
+   "src": "assets/audio/voice/continue.mp3",
+   "duration": 1.146,
+   "text": "Continue?"
+  },
+  "game_over": {
+   "src": "assets/audio/voice/game_over.mp3",
+   "duration": 2.133,
+   "text": "Game over."
+  },
+  "welcome": {
+   "src": "assets/audio/voice/welcome.mp3",
+   "duration": 3.412,
+   "text": "Welcome to... Bloodbath."
+  },
+  "boss_warning": {
+   "src": "assets/audio/voice/boss_warning.mp3",
+   "duration": 3.642,
+   "text": "Warning! A huge enemy is approaching!"
+  },
+  "rank_s": {
+   "src": "assets/audio/voice/rank_s.mp3",
+   "duration": 2.348,
+   "text": "S rank!"
+  },
+  "rank_a": {
+   "src": "assets/audio/voice/rank_a.mp3",
+   "duration": 1.477,
+   "text": "A rank!"
+  },
+  "rank_b": {
+   "src": "assets/audio/voice/rank_b.mp3",
+   "duration": 1.358,
+   "text": "B rank."
+  },
+  "rank_c": {
+   "src": "assets/audio/voice/rank_c.mp3",
+   "duration": 1.406,
+   "text": "C rank."
+  },
+  "new_record": {
+   "src": "assets/audio/voice/new_record.mp3",
+   "duration": 2.79,
+   "text": "New record!"
+  },
+  "checkpoint": {
+   "src": "assets/audio/voice/checkpoint.mp3",
+   "duration": 1.124,
+   "text": "Checkpoint!"
+  },
+  "narr_1": {
+   "src": "assets/audio/voice/narr_1.mp3",
+   "duration": 5.731,
+   "text": "They came from the pale north. They called themselves the Legion."
+  },
+  "narr_2": {
+   "src": "assets/audio/voice/narr_2.mp3",
+   "duration": 5.874,
+   "text": "They took the blood of the living, and sealed it in their cathedrals."
+  },
+  "narr_3": {
+   "src": "assets/audio/voice/narr_3.mp3",
+   "duration": 4.418,
+   "text": "The world went grey. The rivers ran dry."
+  },
+  "narr_4": {
+   "src": "assets/audio/voice/narr_4.mp3",
+   "duration": 3.454,
+   "text": "But one soldier still bleeds red."
+  },
+  "narr_5": {
+   "src": "assets/audio/voice/narr_5.mp3",
+   "duration": 2.845,
+   "text": "It is time to give it all back."
+  }
+ },
+ "sfx": {
+  "armor_hit": [
+   "assets/audio/sfx/armor_hit_1.mp3",
+   "assets/audio/sfx/armor_hit_2.mp3",
+   "assets/audio/sfx/armor_hit_3.mp3"
+  ],
+  "boom_hit": [
+   "assets/audio/sfx/boom_hit.mp3"
+  ],
+  "dash": [
+   "assets/audio/sfx/dash.mp3"
+  ],
+  "double_jump": [
+   "assets/audio/sfx/double_jump.mp3"
+  ],
+  "drip": [
+   "assets/audio/sfx/drip_1.mp3",
+   "assets/audio/sfx/drip_2.mp3",
+   "assets/audio/sfx/drip_3.mp3"
+  ],
+  "enemy_alert": [
+   "assets/audio/sfx/enemy_alert_1.mp3",
+   "assets/audio/sfx/enemy_alert_2.mp3",
+   "assets/audio/sfx/enemy_alert_3.mp3"
+  ],
+  "enemy_death": [
+   "assets/audio/sfx/enemy_death_1.mp3",
+   "assets/audio/sfx/enemy_death_2.mp3",
+   "assets/audio/sfx/enemy_death_3.mp3",
+   "assets/audio/sfx/enemy_death_4.mp3"
+  ],
+  "enemy_pain": [
+   "assets/audio/sfx/enemy_pain_1.mp3",
+   "assets/audio/sfx/enemy_pain_2.mp3",
+   "assets/audio/sfx/enemy_pain_3.mp3",
+   "assets/audio/sfx/enemy_pain_4.mp3"
+  ],
+  "execution": [
+   "assets/audio/sfx/execution.mp3"
+  ],
+  "explosion": [
+   "assets/audio/sfx/explosion_1.mp3",
+   "assets/audio/sfx/explosion_2.mp3",
+   "assets/audio/sfx/explosion_3.mp3"
+  ],
+  "footstep": [
+   "assets/audio/sfx/footstep_1.mp3",
+   "assets/audio/sfx/footstep_2.mp3",
+   "assets/audio/sfx/footstep_3.mp3"
+  ],
+  "frenzy_start": [
+   "assets/audio/sfx/frenzy_start.mp3"
+  ],
+  "glass_break": [
+   "assets/audio/sfx/glass_break.mp3"
+  ],
+  "gore": [
+   "assets/audio/sfx/gore_1.mp3",
+   "assets/audio/sfx/gore_2.mp3",
+   "assets/audio/sfx/gore_3.mp3"
+  ],
+  "grenade_throw": [
+   "assets/audio/sfx/grenade_throw.mp3"
+  ],
+  "health": [
+   "assets/audio/sfx/health.mp3"
+  ],
+  "heartbeat": [
+   "assets/audio/sfx/heartbeat.mp3"
+  ],
+  "hmg": [
+   "assets/audio/sfx/hmg_1.mp3",
+   "assets/audio/sfx/hmg_2.mp3",
+   "assets/audio/sfx/hmg_3.mp3"
+  ],
+  "jump": [
+   "assets/audio/sfx/jump.mp3"
+  ],
+  "land": [
+   "assets/audio/sfx/land.mp3"
+  ],
+  "low_health_alarm": [
+   "assets/audio/sfx/low_health_alarm.mp3"
+  ],
+  "pickup": [
+   "assets/audio/sfx/pickup.mp3"
+  ],
+  "rifle": [
+   "assets/audio/sfx/rifle_1.mp3",
+   "assets/audio/sfx/rifle_2.mp3",
+   "assets/audio/sfx/rifle_3.mp3"
+  ],
+  "ripper_fire": [
+   "assets/audio/sfx/ripper_fire.mp3"
+  ],
+  "ripper_hit": [
+   "assets/audio/sfx/ripper_hit_1.mp3",
+   "assets/audio/sfx/ripper_hit_2.mp3"
+  ],
+  "shell": [
+   "assets/audio/sfx/shell_1.mp3",
+   "assets/audio/sfx/shell_2.mp3"
+  ],
+  "shotgun": [
+   "assets/audio/sfx/shotgun_1.mp3",
+   "assets/audio/sfx/shotgun_2.mp3"
+  ],
+  "slash": [
+   "assets/audio/sfx/slash_1.mp3",
+   "assets/audio/sfx/slash_2.mp3",
+   "assets/audio/sfx/slash_3.mp3"
+  ],
+  "slash_hit": [
+   "assets/audio/sfx/slash_hit_1.mp3",
+   "assets/audio/sfx/slash_hit_2.mp3"
+  ],
+  "slide": [
+   "assets/audio/sfx/slide.mp3"
+  ],
+  "splat": [
+   "assets/audio/sfx/splat_1.mp3",
+   "assets/audio/sfx/splat_2.mp3",
+   "assets/audio/sfx/splat_3.mp3",
+   "assets/audio/sfx/splat_4.mp3"
+  ],
+  "spurt": [
+   "assets/audio/sfx/spurt.mp3"
+  ],
+  "squelch": [
+   "assets/audio/sfx/squelch_1.mp3",
+   "assets/audio/sfx/squelch_2.mp3",
+   "assets/audio/sfx/squelch_3.mp3"
+  ],
+  "ui_back": [
+   "assets/audio/sfx/ui_back.mp3"
+  ],
+  "ui_move": [
+   "assets/audio/sfx/ui_move.mp3"
+  ],
+  "ui_select": [
+   "assets/audio/sfx/ui_select.mp3"
+  ],
+  "ui_start": [
+   "assets/audio/sfx/ui_start.mp3"
+  ],
+  "whoosh": [
+   "assets/audio/sfx/whoosh.mp3"
+  ],
+  "enemy_shot": [
+   "assets/audio/sfx/enemy_shot_1.mp3",
+   "assets/audio/sfx/enemy_shot_2.mp3"
+  ],
+  "enemy_laser_charge": [
+   "assets/audio/sfx/enemy_laser_charge_1.mp3"
+  ]
+ }
+}

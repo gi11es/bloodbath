@@ -1,0 +1,924 @@
+{
+  "units": "1 world unit = 1 m; camera 16 x 9 m; ground surface y = 0",
+  "notes": "Layers tile horizontally (far/mid/near/ground_top/platform) and ground_fill tiles in x and y. The boss arena reuses bg/stage2 ground_fill, ground_top and platform.",
+  "backgrounds": {
+    "stage1": {
+      "sky": {
+        "file": "bg/stage1/sky.webp",
+        "px": [
+          4096,
+          1755
+        ],
+        "alpha": false,
+        "mode": "fullscreen",
+        "parallax": 0.03
+      },
+      "far": {
+        "file": "bg/stage1/far.webp",
+        "px": [
+          4800,
+          1400
+        ],
+        "alpha": true,
+        "height_m": 9.0,
+        "parallax": 0.15,
+        "anchor": "bottom at y=-0.5 m",
+        "width_m": 30.86
+      },
+      "mid": {
+        "file": "bg/stage1/mid.webp",
+        "px": [
+          4492,
+          1400
+        ],
+        "alpha": true,
+        "height_m": 10.0,
+        "parallax": 0.4,
+        "anchor": "bottom at y=-1.0 m",
+        "width_m": 32.09
+      },
+      "near": {
+        "file": "bg/stage1/near.webp",
+        "px": [
+          4000,
+          800
+        ],
+        "alpha": true,
+        "height_m": 4.0,
+        "parallax": 1.35,
+        "anchor": "bottom at y=-2.2 m, drawn in front of the action",
+        "width_m": 20.0
+      },
+      "ground_fill": {
+        "file": "bg/stage1/ground_fill.webp",
+        "px": [
+          1024,
+          1024
+        ],
+        "alpha": false,
+        "width_m": 4.0,
+        "height_m": 4.0,
+        "tile": "xy",
+        "anchor": "below ground_top"
+      },
+      "ground_top": {
+        "file": "bg/stage1/ground_top.webp",
+        "px": [
+          2048,
+          512
+        ],
+        "alpha": true,
+        "width_m": 8.0,
+        "height_m": 2.0,
+        "tile": "x",
+        "surface_px": 154,
+        "surface_frac": 0.3,
+        "anchor": "surface line at y=0"
+      },
+      "platform": {
+        "file": "bg/stage1/platform.webp",
+        "px": [
+          2048,
+          256
+        ],
+        "alpha": true,
+        "width_m": 8.0,
+        "height_m": 1.0,
+        "tile": "x",
+        "surface_px": 31,
+        "surface_frac": 0.12,
+        "anchor": "surface line at the platform top"
+      }
+    },
+    "stage2": {
+      "sky": {
+        "file": "bg/stage2/sky.webp",
+        "px": [
+          4096,
+          1755
+        ],
+        "alpha": false,
+        "mode": "fullscreen",
+        "parallax": 0.03
+      },
+      "far": {
+        "file": "bg/stage2/far.webp",
+        "px": [
+          3802,
+          1400
+        ],
+        "alpha": true,
+        "height_m": 9.0,
+        "parallax": 0.15,
+        "anchor": "bottom at y=-0.5 m",
+        "width_m": 24.44
+      },
+      "mid": {
+        "file": "bg/stage2/mid.webp",
+        "px": [
+          2600,
+          1400
+        ],
+        "alpha": true,
+        "height_m": 10.0,
+        "parallax": 0.4,
+        "anchor": "bottom at y=-1.0 m",
+        "width_m": 18.57
+      },
+      "near": {
+        "file": "bg/stage2/near.webp",
+        "px": [
+          4000,
+          800
+        ],
+        "alpha": true,
+        "height_m": 4.0,
+        "parallax": 1.35,
+        "anchor": "bottom at y=-2.2 m, drawn in front of the action",
+        "width_m": 20.0
+      },
+      "ground_fill": {
+        "file": "bg/stage2/ground_fill.webp",
+        "px": [
+          1024,
+          1024
+        ],
+        "alpha": false,
+        "width_m": 4.0,
+        "height_m": 4.0,
+        "tile": "xy",
+        "anchor": "below ground_top"
+      },
+      "ground_top": {
+        "file": "bg/stage2/ground_top.webp",
+        "px": [
+          2048,
+          512
+        ],
+        "alpha": true,
+        "width_m": 8.0,
+        "height_m": 2.0,
+        "tile": "x",
+        "surface_px": 154,
+        "surface_frac": 0.3,
+        "anchor": "surface line at y=0"
+      },
+      "platform": {
+        "file": "bg/stage2/platform.webp",
+        "px": [
+          2048,
+          256
+        ],
+        "alpha": true,
+        "width_m": 8.0,
+        "height_m": 1.0,
+        "tile": "x",
+        "surface_px": 31,
+        "surface_frac": 0.12,
+        "anchor": "surface line at the platform top"
+      }
+    },
+    "boss": {
+      "sky": {
+        "file": "bg/boss/sky.webp",
+        "px": [
+          4096,
+          1755
+        ],
+        "alpha": false,
+        "mode": "fullscreen",
+        "parallax": 0.03
+      },
+      "far": {
+        "file": "bg/boss/far.webp",
+        "px": [
+          2032,
+          1400
+        ],
+        "alpha": true,
+        "height_m": 9.0,
+        "parallax": 0.15,
+        "anchor": "bottom at y=-0.5 m",
+        "width_m": 13.06
+      },
+      "mid": {
+        "file": "bg/boss/mid.webp",
+        "px": [
+          4800,
+          1400
+        ],
+        "alpha": true,
+        "height_m": 10.0,
+        "parallax": 0.4,
+        "anchor": "bottom at y=-1.0 m",
+        "width_m": 34.29
+      },
+      "ground_fill": {
+        "file": "bg/stage2/ground_fill.webp",
+        "px": [
+          1024,
+          1024
+        ],
+        "alpha": false,
+        "width_m": 4.0,
+        "height_m": 4.0,
+        "tile": "xy",
+        "anchor": "below ground_top",
+        "shared_from": "stage2"
+      },
+      "ground_top": {
+        "file": "bg/stage2/ground_top.webp",
+        "px": [
+          2048,
+          512
+        ],
+        "alpha": true,
+        "width_m": 8.0,
+        "height_m": 2.0,
+        "tile": "x",
+        "surface_px": 154,
+        "surface_frac": 0.3,
+        "anchor": "surface line at y=0",
+        "shared_from": "stage2"
+      },
+      "platform": {
+        "file": "bg/stage2/platform.webp",
+        "px": [
+          2048,
+          256
+        ],
+        "alpha": true,
+        "width_m": 8.0,
+        "height_m": 1.0,
+        "tile": "x",
+        "surface_px": 31,
+        "surface_frac": 0.12,
+        "anchor": "surface line at the platform top",
+        "shared_from": "stage2"
+      }
+    }
+  },
+  "props": {
+    "crate": {
+      "file": "props/crate.webp",
+      "px": [
+        935,
+        599
+      ],
+      "alpha": true,
+      "width_m": 1.1,
+      "height_m": 0.7,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "barrel_red": {
+      "file": "props/barrel_red.webp",
+      "px": [
+        541,
+        878
+      ],
+      "alpha": true,
+      "width_m": 0.62,
+      "height_m": 1.0,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "sandbags": {
+      "file": "props/sandbags.webp",
+      "px": [
+        1154,
+        349
+      ],
+      "alpha": true,
+      "width_m": 3.31,
+      "height_m": 1.0,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "car_wreck": {
+      "file": "props/car_wreck.webp",
+      "px": [
+        1193,
+        418
+      ],
+      "alpha": true,
+      "width_m": 4.2,
+      "height_m": 1.47,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "lamp_post": {
+      "file": "props/lamp_post.webp",
+      "px": [
+        301,
+        1180
+      ],
+      "alpha": true,
+      "width_m": 1.15,
+      "height_m": 4.5,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "legion_banner": {
+      "file": "props/legion_banner.webp",
+      "px": [
+        427,
+        1209
+      ],
+      "alpha": true,
+      "width_m": 1.77,
+      "height_m": 5.0,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "dead_tree": {
+      "file": "props/dead_tree.webp",
+      "px": [
+        900,
+        965
+      ],
+      "alpha": true,
+      "width_m": 5.13,
+      "height_m": 5.5,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "harvester": {
+      "file": "props/harvester.webp",
+      "px": [
+        1068,
+        726
+      ],
+      "alpha": true,
+      "width_m": 3.53,
+      "height_m": 2.4,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "ruined_wall": {
+      "file": "props/ruined_wall.webp",
+      "px": [
+        1028,
+        630
+      ],
+      "alpha": true,
+      "width_m": 5.87,
+      "height_m": 3.6,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "pillar": {
+      "file": "props/pillar.webp",
+      "px": [
+        309,
+        1164
+      ],
+      "alpha": true,
+      "width_m": 1.86,
+      "height_m": 7.0,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "chain_hook": {
+      "file": "props/chain_hook.webp",
+      "px": [
+        190,
+        1228
+      ],
+      "alpha": true,
+      "width_m": 0.62,
+      "height_m": 4.0,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "blood_vat": {
+      "file": "props/blood_vat.webp",
+      "px": [
+        617,
+        1181
+      ],
+      "alpha": true,
+      "width_m": 2.19,
+      "height_m": 4.2,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "candelabra": {
+      "file": "props/candelabra.webp",
+      "px": [
+        482,
+        1150
+      ],
+      "alpha": true,
+      "width_m": 0.92,
+      "height_m": 2.2,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "organ_pipes": {
+      "file": "props/organ_pipes.webp",
+      "px": [
+        527,
+        1169
+      ],
+      "alpha": true,
+      "width_m": 2.7,
+      "height_m": 6.0,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "altar": {
+      "file": "props/altar.webp",
+      "px": [
+        1162,
+        509
+      ],
+      "alpha": true,
+      "width_m": 3.04,
+      "height_m": 1.33,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "pickup_h": {
+      "file": "props/pickup_h.webp",
+      "px": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "width_m": 0.7,
+      "height_m": 0.7,
+      "pivot": "centre",
+      "kind": "pickup"
+    },
+    "pickup_s": {
+      "file": "props/pickup_s.webp",
+      "px": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "width_m": 0.7,
+      "height_m": 0.7,
+      "pivot": "centre",
+      "kind": "pickup"
+    },
+    "pickup_r": {
+      "file": "props/pickup_r.webp",
+      "px": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "width_m": 0.7,
+      "height_m": 0.7,
+      "pivot": "centre",
+      "kind": "pickup"
+    },
+    "pickup_grenade": {
+      "file": "props/pickup_grenade.webp",
+      "px": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "width_m": 0.7,
+      "height_m": 0.7,
+      "pivot": "centre",
+      "kind": "pickup"
+    },
+    "pickup_health": {
+      "file": "props/pickup_health.webp",
+      "px": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "width_m": 0.7,
+      "height_m": 0.7,
+      "pivot": "centre",
+      "kind": "pickup"
+    },
+    "boss_bones": {
+      "file": "props/boss_bones.webp",
+      "px": [
+        1200,
+        495
+      ],
+      "alpha": true,
+      "width_m": 3.39,
+      "height_m": 1.4,
+      "pivot": "bottom-centre",
+      "stage": "boss"
+    },
+    "boss_cauldron": {
+      "file": "props/boss_cauldron.webp",
+      "px": [
+        1119,
+        601
+      ],
+      "alpha": true,
+      "width_m": 4.84,
+      "height_m": 2.6,
+      "pivot": "bottom-centre",
+      "stage": "boss"
+    },
+    "boss_idol": {
+      "file": "props/boss_idol.webp",
+      "px": [
+        404,
+        1200
+      ],
+      "alpha": true,
+      "width_m": 2.69,
+      "height_m": 8.0,
+      "pivot": "bottom-centre",
+      "stage": "boss"
+    },
+    "boss_pylon": {
+      "file": "props/boss_pylon.webp",
+      "px": [
+        452,
+        1200
+      ],
+      "alpha": true,
+      "width_m": 3.39,
+      "height_m": 9.0,
+      "pivot": "bottom-centre",
+      "stage": "boss"
+    },
+    "s1_barricade": {
+      "file": "props/s1_barricade.webp",
+      "px": [
+        1135,
+        566
+      ],
+      "alpha": true,
+      "width_m": 2.81,
+      "height_m": 1.4,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s1_cart": {
+      "file": "props/s1_cart.webp",
+      "px": [
+        1124,
+        388
+      ],
+      "alpha": true,
+      "width_m": 3.77,
+      "height_m": 1.3,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s1_corpse_pile": {
+      "file": "props/s1_corpse_pile.webp",
+      "px": [
+        1099,
+        512
+      ],
+      "alpha": true,
+      "width_m": 2.15,
+      "height_m": 1.0,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s1_fence": {
+      "file": "props/s1_fence.webp",
+      "px": [
+        1132,
+        356
+      ],
+      "alpha": true,
+      "width_m": 3.5,
+      "height_m": 1.1,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s1_hay": {
+      "file": "props/s1_hay.webp",
+      "px": [
+        1000,
+        653
+      ],
+      "alpha": true,
+      "width_m": 2.3,
+      "height_m": 1.5,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s1_radio_mast": {
+      "file": "props/s1_radio_mast.webp",
+      "px": [
+        410,
+        1200
+      ],
+      "alpha": true,
+      "width_m": 3.08,
+      "height_m": 9.0,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s1_signpost": {
+      "file": "props/s1_signpost.webp",
+      "px": [
+        616,
+        1161
+      ],
+      "alpha": true,
+      "width_m": 1.38,
+      "height_m": 2.6,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s1_street_shrine": {
+      "file": "props/s1_street_shrine.webp",
+      "px": [
+        292,
+        1113
+      ],
+      "alpha": true,
+      "width_m": 0.58,
+      "height_m": 2.2,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s1_tank_wreck": {
+      "file": "props/s1_tank_wreck.webp",
+      "px": [
+        1040,
+        396
+      ],
+      "alpha": true,
+      "width_m": 6.3,
+      "height_m": 2.4,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s1_tree_burnt": {
+      "file": "props/s1_tree_burnt.webp",
+      "px": [
+        642,
+        1093
+      ],
+      "alpha": true,
+      "width_m": 3.52,
+      "height_m": 6.0,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s1_well": {
+      "file": "props/s1_well.webp",
+      "px": [
+        738,
+        1000
+      ],
+      "alpha": true,
+      "width_m": 1.92,
+      "height_m": 2.6,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s2_banner_stand": {
+      "file": "props/s2_banner_stand.webp",
+      "px": [
+        410,
+        1200
+      ],
+      "alpha": true,
+      "width_m": 1.54,
+      "height_m": 4.5,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "s2_brazier": {
+      "file": "props/s2_brazier.webp",
+      "px": [
+        638,
+        1159
+      ],
+      "alpha": true,
+      "width_m": 0.88,
+      "height_m": 1.6,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "s2_coffin": {
+      "file": "props/s2_coffin.webp",
+      "px": [
+        449,
+        1156
+      ],
+      "alpha": true,
+      "width_m": 0.89,
+      "height_m": 2.3,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "s2_font": {
+      "file": "props/s2_font.webp",
+      "px": [
+        897,
+        1000
+      ],
+      "alpha": true,
+      "width_m": 1.17,
+      "height_m": 1.3,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "s2_gear": {
+      "file": "props/s2_gear.webp",
+      "px": [
+        1113,
+        611
+      ],
+      "alpha": true,
+      "width_m": 5.46,
+      "height_m": 3.0,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "s2_lectern": {
+      "file": "props/s2_lectern.webp",
+      "px": [
+        539,
+        1161
+      ],
+      "alpha": true,
+      "width_m": 0.7,
+      "height_m": 1.5,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "s2_pews": {
+      "file": "props/s2_pews.webp",
+      "px": [
+        1200,
+        331
+      ],
+      "alpha": true,
+      "width_m": 3.99,
+      "height_m": 1.1,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "s2_pump": {
+      "file": "props/s2_pump.webp",
+      "px": [
+        650,
+        1156
+      ],
+      "alpha": true,
+      "width_m": 1.57,
+      "height_m": 2.8,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "s2_reliquary": {
+      "file": "props/s2_reliquary.webp",
+      "px": [
+        689,
+        1200
+      ],
+      "alpha": true,
+      "width_m": 0.98,
+      "height_m": 1.7,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "s2_skull_pile": {
+      "file": "props/s2_skull_pile.webp",
+      "px": [
+        1154,
+        573
+      ],
+      "alpha": true,
+      "width_m": 2.22,
+      "height_m": 1.1,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "s2_statue": {
+      "file": "props/s2_statue.webp",
+      "px": [
+        345,
+        1180
+      ],
+      "alpha": true,
+      "width_m": 1.23,
+      "height_m": 4.2,
+      "pivot": "bottom-centre",
+      "stage": 2
+    },
+    "s1_cage": {
+      "file": "props/s1_cage.webp",
+      "px": [
+        949,
+        1000
+      ],
+      "alpha": true,
+      "width_m": 2.09,
+      "height_m": 2.2,
+      "pivot": "bottom-centre",
+      "stage": 1
+    },
+    "s2_pipes": {
+      "file": "props/s2_pipes.webp",
+      "px": [
+        530,
+        1087
+      ],
+      "alpha": true,
+      "width_m": 1.56,
+      "height_m": 3.2,
+      "pivot": "bottom-centre",
+      "stage": 2
+    }
+  },
+  "intro": {
+    "panel_1": {
+      "file": "intro/panel_1.webp",
+      "px": [
+        3840,
+        2160
+      ],
+      "alpha": false
+    },
+    "panel_2": {
+      "file": "intro/panel_2.webp",
+      "px": [
+        3840,
+        2160
+      ],
+      "alpha": false
+    },
+    "panel_3": {
+      "file": "intro/panel_3.webp",
+      "px": [
+        3840,
+        2160
+      ],
+      "alpha": false
+    },
+    "panel_4": {
+      "file": "intro/panel_4.webp",
+      "px": [
+        3840,
+        2160
+      ],
+      "alpha": false
+    },
+    "panel_5": {
+      "file": "intro/panel_5.webp",
+      "px": [
+        3840,
+        2160
+      ],
+      "alpha": false
+    }
+  },
+  "ui": {
+    "title_bg": {
+      "file": "ui/title_bg.webp",
+      "px": [
+        3840,
+        2160
+      ],
+      "alpha": false,
+      "logo_safe_area": "upper centre, about x 25-75 %, y 3-35 %"
+    },
+    "logo": {
+      "file": "ui/logo.webp",
+      "px": [
+        1236,
+        469
+      ],
+      "alpha": true
+    },
+    "studio_logo": {
+      "file": "ui/studio_logo.webp",
+      "px": [
+        979,
+        513
+      ],
+      "alpha": true
+    },
+    "legion_sigil": {
+      "file": "ui/legion_sigil.webp",
+      "px": [
+        618,
+        1008
+      ],
+      "alpha": true
+    },
+    "portrait_red": {
+      "file": "ui/portrait_red.webp",
+      "px": [
+        512,
+        512
+      ],
+      "alpha": true
+    }
+  }
+}

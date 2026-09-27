@@ -34,8 +34,8 @@ CHARS = {
  }),
  "grunt": dict(height=1.8, res=0.6, parts={
    "head": dict(pivot=(98, 172), top=(80, 8)),
-   "torso": dict(src="art_src/chars/torso_fix/grunt.png", pivot=(140, 350), neck=(158, 58), shoulder=(180, 88), hip=(140, 350)),
-   "upperarm": dict(pivot=(55, 52), end=(55, 222), clip=250),
+   "torso": dict(src="art_src/chars/torso_fix/grunt.png", pivot=(140, 350), neck=(158, 58), shoulder=(126, 128), hip=(140, 350)),
+   "upperarm": dict(pivot=(62, 66), end=(55, 222), clip=250),
    "forearm": dict(pivot=(35, 65), end=(215, 110)),
    "thigh": dict(pivot=(80, 40), end=(85, 240)),
    "shin": dict(pivot=(45, 35), end=(70, 215), sole=(70, 268)),

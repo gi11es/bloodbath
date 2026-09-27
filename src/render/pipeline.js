@@ -131,7 +131,9 @@ void main() {
   if (frenzy > 0.0) {
     // the world drains to cold charcoal; only the blood keeps its colour
     float bm = smoothstep(0.35, 0.7, texture2D(tBloodMask, uv).r);
-    vec3 mono = mix(vec3(pow(l, 1.1) * 0.85) * vec3(0.85, 0.88, 1.0), col * vec3(0.7, 0.75, 0.85), 0.3);
+    // contrast-preserving desaturation: highlights are pulled down so white armour keeps its detail
+    float lm = pow(l, 1.35) * 0.78;
+    vec3 mono = mix(vec3(lm) * vec3(0.85, 0.88, 1.0), col * vec3(0.62, 0.66, 0.78), 0.3);
     vec3 hot = col * vec3(1.5, 0.7, 0.7);
     col = mix(col, mix(mono, hot, bm), frenzy * 0.8);
   }

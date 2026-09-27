@@ -180,8 +180,9 @@ export class Hud {
     let offL = false, offR = false;
     for (const e of g.enemies) {
       if (!e.alive) continue;
-      const dx = e.x - g.cam.cx;
+      const dx = e.x - g.cam.cx, dy = e.cy - g.cam.cy;
       if (dx < -g.cam.viewW / 2) offL = true; else if (dx > g.cam.viewW / 2) offR = true;
+      else if (Math.abs(dy) > g.cam.viewH / 2) { if (dx < 0) offL = true; else offR = true; }
     }
     this.arrowL.classList.toggle('show', offL && g.state === 'play');
     this.arrowR.classList.toggle('show', offR && g.state === 'play');

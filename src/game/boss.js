@@ -56,7 +56,7 @@ export class Boss extends Enemy {
     if (!this.alive || this.state === 'intro') return null;
     if (hit.seg === 'tank') {
       this.tankHp -= hit.dmg;
-      this.flash = 0.6;
+      if (this.t - (this.lastFlash || 0) > 0.18) { this.flash = 0.35; this.lastFlash = this.t; }
       g.fx.spark(hit.x, hit.y, rand(0, 6.28), 6, 6, [4, 1.2, 1.2]);
       g.bleed(this, () => g.blood.spurt(hit.x, hit.y, Math.atan2(hit.dy, hit.dx) + Math.PI + rand(-0.4, 0.4), 5, 8, 0.6, 0.06));
       audio.sfx('glass_break', { vol: 0.25, rate: 1.6, minGap: 0.08 });
@@ -374,8 +374,8 @@ export class Boss extends Enemy {
     rig.draw();
     if (!this.alive) return;
     const hx = rig.jx(J.head) * 0.55 + rig.jx(J.neck) * 0.45, hy = rig.jy(J.head) * 0.55 + rig.jy(J.neck) * 0.45;
-    g.lights.add(hx + this.f * 0.2, hy, [1, 0.1, 0.08], 1.6, 3.5);
-    if (!this.tankBroken) { const [tx, ty] = this.tankPos(); g.lights.add(tx, ty, [1, 0.08, 0.08], 2 + Math.sin(this.t * 3) * 0.4, 5); }
+    g.lights.add(hx + this.f * 0.2, hy, [1, 0.1, 0.08], 0.9, 2.5);
+    if (!this.tankBroken) { const [tx, ty] = this.tankPos(); g.lights.add(tx - this.f * 0.8, ty, [1, 0.08, 0.08], 1.1 + Math.sin(this.t * 3) * 0.3, 3.5); }
     if (this.state === 'volleyWind' || this.state === 'beamWind') {
       const m = rig.muzzle();
       g.fx.once({ x: m[0], y: m[1], vx: 0, vy: 0, s0: 0.6 + this.stateT * 1.2, s1: 0, shape: 7, c: [3, 0.2, 0.2] });

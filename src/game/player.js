@@ -203,7 +203,11 @@ export class Player {
     if (input.hit('jump')) this.jumpBuf = 0.13;
     const down = input.held('down');
 
-    if (b.grounded) { this.coyote = 0.1; this.jumps = 0; this.airDash = true; this.lastSafe = { x: b.x, y: b.y }; }
+    if (b.grounded) {
+      this.coyote = 0.1; this.jumps = 0; this.airDash = true;
+      // remember a respawn point only where there is solid footing on both sides
+      if (g.world.groundBelow(b.x - 0.6, b.y + 0.1) >= b.y - 0.05 && g.world.groundBelow(b.x + 0.6, b.y + 0.1) >= b.y - 0.05) this.lastSafe = { x: b.x, y: b.y };
+    }
 
     // dash
     if (input.hit('dash') && this.dashCd <= 0 && (b.grounded || this.airDash)) {
@@ -284,7 +288,8 @@ export class Player {
       if (fallV < -10) { g.fx.dust(b.x, b.y, 8); g.cam.shake(0.08); }
       this.landT = 0.12;
     }
-    if (b.fellOut || b.y < -6) this.fallOut();
+    // falling below the ground line means a pit: respawn quickly instead of plummeting off-screen
+    if (b.fellOut || b.y < -2.2) this.fallOut();
     this.landT = Math.max(0, (this.landT || 0) - dt);
     // pits of blood
     if (g.level.pits) for (const pit of g.level.pits) if (b.x > pit.x0 && b.x < pit.x1 && b.y < pit.y + 0.3) this.fallOut(pit.blood);

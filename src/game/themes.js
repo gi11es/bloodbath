@@ -56,9 +56,9 @@ export const THEMES = {
     ambient: [0.5, 0.42, 0.52],
     rim: [1.2, 0.3, 0.35],
     rimDir: [0.0, 1.0],
-    grade: { lift: [0.012, 0.0, 0.025], gain: [1.03, 0.96, 1.0], saturation: 0.98, exposure: 1.0, bloom: 0.7 },
+    grade: { lift: [0.012, 0.0, 0.025], gain: [1.03, 0.96, 1.0], saturation: 0.98, exposure: 0.95, bloom: 0.42 },
     fx: { embers: 0.6, ash: 0.3, rain: 0, dust: 0.5 },
     shaftColor: [0.7, 0.35, 0.55],
-    fogBands: [{ y: 0.0, h: 2.5, color: [0.18, 0.05, 0.14], alpha: 0.28, speed: 0.1 }],
+    fogBands: [{ y: 0.0, h: 2.5, color: [0.18, 0.05, 0.14], alpha: 0.18, speed: 0.1 }],
   },
 };

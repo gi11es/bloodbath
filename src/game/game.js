@@ -160,7 +160,7 @@ export class Game {
       const aspect = img && img.width ? img.width / img.height : 1;
       const h = p.h, w = h * aspect;
       const back = p.layer === 'back';
-      const k = back ? 1.05 : 0.9;
+      const k = (back ? 1.05 : 0.9) * (p.tint ?? 1);
       const mat = makeEnvMaterial(tex, { tint: [amb[0] * k, amb[1] * k, amb[2] * k], lightInfluence: 0.55, emissiveBoost: 0.3 });
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
       const sink = p.hang ? 0 : back ? 0.18 : 0.08;
@@ -263,7 +263,16 @@ export class Game {
       if (this.world.solidAt(x, gy + 0.5)) continue;
       return { x, y: drop ? topY : gy };
     }
-    return null;
+    // fallback: any ground in the arena at least 4 m from the hero, else drop in from the sky
+    for (let tries = 0; tries < 20; tries++) {
+      const x = rand(x0, x1);
+      if (Math.abs(x - P.x) < 4) continue;
+      const gy = this.world.groundBelow(x, 12);
+      if (gy === -Infinity || this.world.solidAt(x, gy + 0.5)) continue;
+      return { x, y: gy };
+    }
+    const x = clamp(P.x + (Math.random() < 0.5 ? -6 : 6), x0, x1);
+    return { x, y: this.cam.cy + this.cam.viewH / 2 + 1 };
   }
 
   // ------------------------------------------------------------------ combat queries
@@ -602,11 +611,18 @@ export class Game {
     const camB = this.arena ? { x0: this.arena.x0, x1: this.arena.x1, y0: -1.6, y1: 13 } : { x0: this.level.bounds.x0, x1: this.level.bounds.x1, y0: -1.6, y1: 13 };
     const ty = Math.max(this.cam.viewH / 2 - 1.5, P.body.y + 2.3 * this.cam.viewH / 9);
     if (this.tightCam) { this.cam.snap(P.body.x, P.body.y + 1.0); }
-    else this.cam.follow(P.body.x, ty, lookX, lookY, pdt || dt * 0.2, camB);
+    else {
+      this.cam.follow(P.body.x, ty, lookX, lookY, pdt || dt * 0.2, camB);
+      // whatever the clamps and look-ahead say, the hero never leaves the safe middle of the frame
+      const mx = this.cam.viewW / 2 - Math.min(3, this.cam.viewW * 0.2);
+      if (P.body.x - this.cam.x > mx) this.cam.x = P.body.x - mx;
+      if (this.cam.x - P.body.x > mx) this.cam.x = P.body.x + mx;
+    }
     this.cam.update(dt);
     // post fx
     const fx = this.app.pipeline.fx;
     fx.frenzy.value = lerp(fx.frenzy.value, P.frenzyActive ? 1 : 0, 1 - Math.exp(-dt * 6));
+    fx.bloomStrength.value = this.theme.grade.bloom * (1 - fx.frenzy.value * 0.5);
     fx.damage.value = Math.max(fx.damage.value - dt * 1.5, P.alive ? clamp(1 - P.hp / 35, 0, 1) * (0.6 + Math.sin(this.time * 6) * 0.2) : 1);
     fx.aberration.value = 0.3 + (this.hitstopT > 0 ? 1.5 : 0) + fx.frenzy.value * 0.8;
     audio.setMusicMuffle(P.frenzyActive ? 0.5 : this.state === 'dead' ? 0.8 : 0);
@@ -648,10 +664,11 @@ export class Game {
       }
     }
     // arena stall recovery: stragglers that cannot reach the hero are brought back into view
-    if (this.arena && !this.arena.boss && this.time - (this.arena.lastKill ?? this.time) > 16) {
+    const seen = (e) => this.onScreen(e.x, 1) && Math.abs(e.cy - this.cam.cy) < this.cam.viewH / 2 - 0.3;
+    if (this.arena && !this.arena.boss && this.time - (this.arena.lastKill ?? this.time) > 8 && !this.enemies.some((e) => e.alive && seen(e))) {
       this.arena.lastKill = this.time;
       for (const e of this.enemies) {
-        if (!e.alive || this.onScreen(e.x, 1)) continue;
+        if (!e.alive || seen(e)) continue;
         const sp = this.pickSpawnPoint(false);
         if (sp) { e.body.x = sp.x; e.body.y = sp.y; e.body.vx = 0; e.body.vy = 0; e.setState('advance'); }
       }

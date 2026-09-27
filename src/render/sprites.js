@@ -142,7 +142,9 @@ void main() {
     base = mix(base, bloodC * (0.7 + 0.5 * dot(tex.rgb, vec3(0.33))), m * 0.92);
     spec = m;
   }
-  vec3 light = ambient * (0.55 + 0.45 * n.z) + pointLights(vWorld, n);
+  // point lights saturate softly: many overlapping lights brighten, they never bleach white armour
+  vec3 pl = pointLights(vWorld, n);
+  vec3 light = ambient * (0.55 + 0.45 * n.z) + pl / (1.0 + pl * 0.45);
   float rim = pow(clamp(dot(n.xy, rimDir) * 1.3, 0.0, 1.0), 2.0) * (1.0 - n.z * 0.6);
   vec3 col = base * light + rimCol * rim * 0.9;
   col += spec * pow(clamp(dot(n, normalize(vec3(-0.3, 0.6, 0.75))), 0.0, 1.0), 12.0) * 0.5;

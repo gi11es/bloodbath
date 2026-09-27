@@ -255,8 +255,15 @@ export class Blood {
   }
 
   count(vol) {
+    if (this.uncountedDepth) return;
     this.spilled += vol;
     if (this.onSpill) this.onSpill(vol);
+  }
+
+  // run emissions that must not score (the hero's own blood)
+  uncounted(fn) {
+    this.uncountedDepth = (this.uncountedDepth || 0) + 1;
+    try { fn(); } finally { this.uncountedDepth--; }
   }
 
   // A directional jet. volume = total litres.

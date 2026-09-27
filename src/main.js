@@ -27,6 +27,8 @@ class App {
     this.loop.onRender = (dt) => this.render(dt);
     this.pipeline.onResize = () => { if (this.game) this.game.cam.resize(this.pipeline.width / this.pipeline.height); };
     window.__app = this;
+    window.__audio = audio;
+    window.__settings = settings;
     if (this.params.get('bot')) this.bot = new Bot(this);
     this.speed = Number(this.params.get('speed') || 1);
   }
@@ -87,6 +89,9 @@ class App {
     await g.load((p) => this.menus.loading(true, p));
     if (this.game !== g) return;
     g.cam.resize(this.pipeline.width / this.pipeline.height);
+    // let the first real frames (GPU uploads, first HUD layout) happen behind the loading screen
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r))));
+    if (this.game !== g) return;
     this.menus.loading(false);
     g.start();
     this.currentStage = stage;

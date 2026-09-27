@@ -9,7 +9,7 @@ export class Score {
     if (carry) Object.assign(this, carry, { recent: 0, mult: 1 });
   }
   computeMult() {
-    this.mult = Math.min(8, 1 + this.recent / 0.9);
+    this.mult = Math.min(8, 1 + this.recent / 2.6);
     if (this.mult > this.maxMult) this.maxMult = this.mult;
   }
   addBlood(vol, living) {

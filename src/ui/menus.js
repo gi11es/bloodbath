@@ -20,7 +20,7 @@ export class Menus {
   blocking() { return this.stack.length > 0 && this.stack[this.stack.length - 1].modal; }
 
   clear() {
-    for (const m of this.stack) m.el.remove();
+    for (const m of this.stack) { m.el.remove(); if (m.overlay) m.overlay.remove(); }
     this.stack = [];
     if (this.layer) { this.layer.remove(); this.layer = null; }
   }
@@ -145,7 +145,8 @@ export class Menus {
     if (!m) return;
     m.el.classList.remove('in');
     m.el.classList.add('out');
-    setTimeout(() => m.el.remove(), 300);
+    const ov = m.overlay;
+    setTimeout(() => { m.el.remove(); if (ov) ov.remove(); }, 300);
     const top = this.stack[this.stack.length - 1];
     if (top) top.el.classList.remove('hidden');
   }
@@ -153,7 +154,12 @@ export class Menus {
   push(opts) {
     const top = this.stack[this.stack.length - 1];
     if (top) top.el.classList.add('hidden');
-    return this.menu({ ...opts, parent: opts.parent || top?.el.parentElement });
+    // sub-menus live on their own centred overlay so they never collide with the logo or HUD
+    const overlay = h(`<div class="screen overlay"></div>`);
+    this.ui.appendChild(overlay);
+    const m = this.menu({ ...opts, parent: overlay });
+    m.overlay = overlay;
+    return m;
   }
 
   update(dt, inp) {
@@ -316,7 +322,7 @@ export class Menus {
       ['PARRIES', s.parries, s.parries],
       ['MAX BLOODLUST', `x${s.maxMult.toFixed(1)}`, s.maxMult],
       ['TIME', `${mins}:${String(secs).padStart(2, '0')}`, 0],
-      ['CONTINUES', s.deaths, s.deaths],
+      ['DEATHS', s.deaths, s.deaths],
     ];
     const layer = h(`<div class="screen results ${r.cleared ? 'win' : 'lose'}">
       <div class="res-title">${title}</div>

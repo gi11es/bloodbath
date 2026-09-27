@@ -47,6 +47,7 @@ export class TitleScene {
     if (Math.random() < dt * 3) this.fx.smoke(rand(-hw, hw), -hh + rand(0, 1), rand(-0.2, 0.2), 0.3, rand(0.8, 1.5), 6, [0.3, 0.06, 0.05], 0.25);
     this.fx.update(dt, null);
     this.logo.update(dt, document.querySelector('.title-logo img'), this.cam, w, h);
+    this.logo.dim = document.querySelector('.screen.overlay') ? 1 : 0;
   }
   render(dt) {
     const u = this.mat.uniforms;

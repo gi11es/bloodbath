@@ -106,8 +106,7 @@ export class Player {
     g.director.onPlayerDamaged(dmg, Math.max(0, this.hp) / this.hpMax);
     g.onPlayerHurt(dmg);
     // the hero bleeds too
-    g.blood.livingBonus = false;
-    g.blood.spurt(this.cx, this.cy + 0.2, Math.atan2(0.4, dir || 1), 4, 14, 1, 0.08);
+    g.blood.uncounted(() => g.blood.spurt(this.cx, this.cy + 0.2, Math.atan2(0.4, dir || 1), 4, 14, 1, 0.08));
     audio.sfx('squelch', { vol: 0.7 });
     if (this.hp <= 0) this.die(dir);
     return true;
@@ -119,8 +118,7 @@ export class Player {
     this.hp = 0;
     this.rig.weaponVisible = false;
     this.ragdoll = new Ragdoll(this.rig, dir * 6, 5, -dir * 3);
-    g.blood.livingBonus = false;
-    g.blood.burst(this.cx, this.cy, 1, 0.6);
+    g.blood.uncounted(() => g.blood.burst(this.cx, this.cy, 1, 0.6));
     audio.sfx('gore', { vol: 1 });
     g.onPlayerDeath();
   }

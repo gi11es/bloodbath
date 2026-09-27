@@ -147,7 +147,7 @@ void main() {
   vec3 col = base * light + rimCol * rim * 0.9;
   col += spec * pow(clamp(dot(n, normalize(vec3(-0.3, 0.6, 0.75))), 0.0, 1.0), 12.0) * 0.5;
   col += base * vFx.w;
-  col = mix(col, vec3(1.6, 1.45, 1.4), vFx.y * 0.75);
+  col = mix(col, vec3(1.5, 1.35, 1.3), vFx.y * 0.55);
   gl_FragColor = vec4(col, a);
 }`;
 
@@ -261,7 +261,8 @@ void main() {
   float lum = max(tex.r, max(tex.g, tex.b));
   col += tex.rgb * smoothstep(0.75, 1.0, lum) * emissiveBoost;
   col = mix(col, fogColor, fog);
-  if (lightInfluence > 0.0) col += tex.rgb * pointLights(vWorld, vec3(0.0, 0.0, 1.0)) * lightInfluence;
+  // soft-saturate the light so bright paint near a fire glows instead of clipping to white
+  if (lightInfluence > 0.0) { vec3 pl = pointLights(vWorld, vec3(0.0, 0.0, 1.0)) * lightInfluence; col += tex.rgb * pl / (1.0 + pl * 0.6); }
   gl_FragColor = vec4(col, a);
 }`;
 

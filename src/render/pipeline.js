@@ -131,9 +131,9 @@ void main() {
   if (frenzy > 0.0) {
     // the world drains to cold charcoal; only the blood keeps its colour
     float bm = smoothstep(0.35, 0.7, texture2D(tBloodMask, uv).r);
-    vec3 mono = vec3(pow(l, 1.15) * 0.8) * vec3(0.85, 0.88, 1.0);
+    vec3 mono = mix(vec3(pow(l, 1.1) * 0.85) * vec3(0.85, 0.88, 1.0), col * vec3(0.7, 0.75, 0.85), 0.3);
     vec3 hot = col * vec3(1.5, 0.7, 0.7);
-    col = mix(col, mix(mono, hot, bm), frenzy * 0.92);
+    col = mix(col, mix(mono, hot, bm), frenzy * 0.8);
   }
   // damage vignette
   float v = smoothstep(0.85, 0.2, length(cc * vec2(1.0, 0.8)));

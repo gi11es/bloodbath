@@ -79,6 +79,9 @@ export class Hud {
     if (this.lastAnn[text] && now - this.lastAnn[text] < (style === 'small' ? 2500 : 900)) return;
     this.lastAnn[text] = now;
     if (style === 'small') { for (const old of this.announceWrap.querySelectorAll('.announce.small')) old.remove(); }
+    // one headline at a time: a new big/medium call replaces the current ones instead of stacking
+    if (style === 'big' || style === 'medium') for (const old of this.announceWrap.querySelectorAll('.announce.big, .announce.medium')) old.remove();
+    if (this.announceWrap.children.length >= 3) this.announceWrap.firstChild.remove();
     const a = el('div', 'announce ' + style, `<span>${text}</span>`);
     if (style === 'weapon' || style === 'big' || style === 'mission' || style === 'arena') {
       for (const old of this.announceWrap.querySelectorAll('.announce.' + style)) old.remove();

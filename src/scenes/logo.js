@@ -177,7 +177,8 @@ export class BloodLogo {
     const r = el.getBoundingClientRect();
     if (r.width < 2) { this.mesh.visible = false; return; }
     this.mesh.visible = true;
-    u.intro.value = Math.min(1, u.intro.value + dt * 1.2);
+    const target = this.dim ? 0.12 : 1;
+    u.intro.value += Math.sign(target - u.intro.value) * Math.min(Math.abs(target - u.intro.value), dt * 3);
     u.logoPx.value.set(r.width, r.height);
     const sx = (cam.right - cam.left) / W, sy = (cam.top - cam.bottom) / H;
     const w = r.width * sx, h = r.height * sy * this.ext;

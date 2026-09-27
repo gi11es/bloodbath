@@ -196,7 +196,8 @@ export class Enemy {
     let dmg = hit.dmg;
     if (hit.seg === 'head' && (hit.kind === 'bullet' || hit.kind === 'pellet')) { dmg *= 2; hit.headshot = true; }
     this.hp -= dmg;
-    this.flash = 1;
+    // flash on the first hit of a volley only, so sustained fire never whites the sprite out
+    if (this.t - (this.lastFlashT ?? -1) > 0.22) { this.flash = 0.8; this.lastFlashT = this.t; }
     this.hurt = Math.min(1, this.hurt + dmg / 40);
     this.lastHitBy = hit.kind;
     // knockback

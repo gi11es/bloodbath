@@ -67,7 +67,8 @@ export class Game {
     this.droneAssets = await loadDroneAssets(this.scene);
     this.droneAssets.batch.mesh.renderOrder = 53;
     onProgress(0.3);
-    this.seed = this.opts.seed ?? ((Math.random() * 2 ** 31) | 0);
+    const qs = new URLSearchParams(location.search).get('seed');
+    this.seed = this.opts.seed ?? (qs ? Number(qs) : (Math.random() * 2 ** 31) | 0);
     this.level = STAGES[this.stageId](this.seed);
     this.theme = THEMES[this.level.theme];
     const L = this.level;
@@ -111,7 +112,27 @@ export class Game {
     this.state = 'intro';
     this.stateT = 0;
     this.cinematic = true;
+    this.prewarm();
     onProgress(1);
+  }
+
+  // compile every shader and upload every texture now, behind the loading screen, not mid-fight
+  prewarm() {
+    const r = this.app.pipeline.renderer;
+    this.cam.resize(this.app.pipeline.width / this.app.pipeline.height);
+    this.cam.apply();
+    r.compile(this.scene, this.cam.cam);
+    r.compile(this.bloodScene, this.cam.cam);
+    const seen = new Set();
+    const up = (o) => {
+      const m = o.material;
+      if (!m || !m.uniforms) return;
+      for (const u of Object.values(m.uniforms)) if (u.value && u.value.isTexture && !seen.has(u.value)) { seen.add(u.value); r.initTexture(u.value); }
+    };
+    this.scene.traverse(up);
+    for (const t of Object.values(this.pickupTex || {})) r.initTexture(t);
+    // one full offscreen frame warms up the render targets and post chain
+    this.render(0);
   }
 
   applyGrade() {
@@ -139,8 +160,8 @@ export class Game {
       const aspect = img && img.width ? img.width / img.height : 1;
       const h = p.h, w = h * aspect;
       const back = p.layer === 'back';
-      const k = back ? 1.25 : 0.9;
-      const mat = makeEnvMaterial(tex, { tint: [amb[0] * k, amb[1] * k, amb[2] * k], lightInfluence: 0.9, emissiveBoost: 0.8 });
+      const k = back ? 1.05 : 0.9;
+      const mat = makeEnvMaterial(tex, { tint: [amb[0] * k, amb[1] * k, amb[2] * k], lightInfluence: 0.55, emissiveBoost: 0.3 });
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
       const sink = p.hang ? 0 : back ? 0.18 : 0.08;
       mesh.position.set(p.x, p.y + h / 2 - sink, 0);
@@ -492,7 +513,7 @@ export class Game {
   onDismember(e, seg) {
     this.score.addEvent('dismember');
     this.cam.shake(0.12);
-    if (Math.random() < 0.25) this.hud.announce(seg === 'head' ? 'DECAPITATED' : 'DISMEMBERED', 'small');
+    if (Math.random() < 0.08) this.hud.announce(seg === 'head' ? 'DECAPITATED' : 'DISMEMBERED', 'small');
   }
   onGibbed() { this.score.addEvent('gib'); this.cam.shake(0.25); this.hud.screenSplatter(0.5); }
   onDrained(e) { this.score.addEvent('drained'); this.hud.announce('DRAINED', 'small'); }

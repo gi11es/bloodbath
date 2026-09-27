@@ -232,3 +232,9 @@ body.in-game.paused { cursor: default; }
 .edge-arrow { position: absolute; top: 50%; font-size: 44px; color: var(--blood-hi); text-shadow: 0 0 12px #f00, 2px 2px 0 #000; opacity: 0; transform: translateY(-50%); }
 .edge-arrow.left { left: 1.2vw; } .edge-arrow.right { right: 1.2vw; }
 .edge-arrow.show { opacity: 1; animation: blink .5s steps(2, start) infinite; }
+
+/* sub-menus float centred over a dimmed backdrop */
+.screen.overlay { background: radial-gradient(ellipse at center, rgba(20, 0, 3, .55), rgba(0, 0, 0, .8)); z-index: 5; animation: fadeIn .25s both; }
+@keyframes fadeIn { from { opacity: 0; } }
+.ctl-row, .ctl-head { padding: 4px 14px; }
+@media (max-height: 820px) { .ctl-table { font-size: 13px; } .menu h2 { font-size: 42px; margin-bottom: 8px; } .menu.options .item { font-size: 22px; } }

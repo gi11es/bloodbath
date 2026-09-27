@@ -149,23 +149,28 @@ export class Hud {
     if (this.splats.length > 24) this.splats.splice(0, this.splats.length - 24);
   }
 
+  // write to the DOM only when the value actually changes
+  setText(el, v) { if (el.__v !== v) { el.__v = v; el.textContent = v; } }
+  setHTML(el, v) { if (el.__h !== v) { el.__h = v; el.innerHTML = v; } }
+  setStyle(el, k, v) { const key = '__s' + k; if (el[key] !== v) { el[key] = v; el.style[k] = v; } }
+
   update(dt) {
     const g = this.game, P = g.player, S = g.score;
     const hpF = Math.max(0, P.hp / P.hpMax);
-    this.hpFill.style.transform = `scaleX(${hpF})`;
-    this.hpNum.textContent = Math.ceil(Math.max(0, P.hp));
+    this.setStyle(this.hpFill, 'transform', `scaleX(${hpF.toFixed(3)})`);
+    this.setText(this.hpNum, String(Math.ceil(Math.max(0, P.hp))));
     this.root.classList.toggle('low-hp', hpF < 0.3 && P.alive);
-    this.frFill.style.transform = `scaleX(${P.frenzyActive ? P.frenzyT / 7 : P.frenzy})`;
+    this.setStyle(this.frFill, 'transform', `scaleX(${(P.frenzyActive ? P.frenzyT / 7 : P.frenzy).toFixed(3)})`);
     this.frenzyEl.classList.toggle('ready', P.frenzy >= 1 && !P.frenzyActive);
     this.frenzyEl.classList.toggle('active', P.frenzyActive);
-    this.wname.textContent = P.weapon.name;
-    this.ammo.innerHTML = P.ammo === Infinity ? '&infin;' : P.ammo;
-    this.gren.textContent = P.grenades;
+    this.setText(this.wname, P.weapon.name);
+    this.setHTML(this.ammo, P.ammo === Infinity ? '&infin;' : String(P.ammo));
+    this.setText(this.gren, String(P.grenades));
     this.shown.score += (S.points - this.shown.score) * Math.min(1, dt * 10);
-    this.scoreEl.textContent = Math.round(this.shown.score).toLocaleString('en-US');
-    this.litresEl.textContent = S.litres.toFixed(2);
-    this.multEl.textContent = 'x' + S.mult.toFixed(1);
-    this.multWrap.style.setProperty('--m', ((S.mult - 1) / 7).toFixed(3));
+    this.setText(this.scoreEl, Math.round(this.shown.score).toLocaleString('en-US'));
+    this.setText(this.litresEl, S.litres.toFixed(2));
+    this.setText(this.multEl, 'x' + S.mult.toFixed(1));
+    if (this.multWrap.__m !== S.mult.toFixed(2)) { this.multWrap.__m = S.mult.toFixed(2); this.multWrap.style.setProperty('--m', ((S.mult - 1) / 7).toFixed(3)); }
     this.multWrap.classList.toggle('hot', S.mult > 3);
     // arena progress: what is left to kill before the path opens
     const A = g.arena;

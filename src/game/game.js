@@ -628,7 +628,7 @@ export class Game {
     audio.setMusicMuffle(P.frenzyActive ? 0.5 : this.state === 'dead' ? 0.8 : 0);
     if (P.frenzyActive && Math.floor(this.time * 1.4) !== this.lastBeat) { this.lastBeat = Math.floor(this.time * 1.4); audio.sfx('heartbeat', { vol: 0.8 }); }
     if (P.alive && P.hp < 30 && Math.floor(this.time * 1.1) !== this.lastAlarm) { this.lastAlarm = Math.floor(this.time * 1.1); audio.sfx('heartbeat', { vol: 0.6 }); if (this.lastAlarm % 3 === 0) audio.sfx('low_health_alarm', { vol: 0.3 }); }
-    this.hud.update(dt);
+    this.hudDt = (this.hudDt || 0) + dt;
   }
 
   threatsNear() {
@@ -881,6 +881,9 @@ export class Game {
     this.blood.render(c.cx, c.viewW);
     this.lights.flush(c.cx, c.cy, c.viewW);
     this.app.pipeline.render(this.scene, c.cam, this.bloodScene, this.time);
+    // HUD DOM work happens once per displayed frame, not per 120 Hz simulation step
+    this.hud.update(this.hudDt || 0);
+    this.hudDt = 0;
     this.hud.render();
   }
 

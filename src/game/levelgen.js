@@ -18,6 +18,7 @@ const POOLS = {
       ['s1_street_shrine', 2.2, 2, { light: [0, 0.8, [1.0, 0.6, 0.3], 1.2, 3, 0.25] }], ['s1_radio_mast', 9.0, 1], ['s1_tree_burnt', 6.0, 2],
     ],
     front: [['sandbags', 0.9, 3], ['s1_fence', 1.1, 1]],
+    cover: ['sandbags', 0.9], box: ['crate', 1.05],
     explosive: ['barrel_red', 1.2],
   },
   stage2: {
@@ -30,6 +31,7 @@ const POOLS = {
       ['s2_pump', 2.8, 1, { blood: 3, hp: 60, light: [0, 1.4, [1.0, 0.1, 0.1], 1.4, 4, 0.1] }], ['s2_lectern', 1.5, 2],
     ],
     front: [['s2_pews', 1.1, 1]],
+    cover: ['s2_pews', 0.95], box: ['s2_reliquary', 1.2],
     explosive: ['barrel_red', 1.2],
   },
 };
@@ -60,19 +62,32 @@ function makeBuilder(theme, seed) {
   L.prop = (type, x, y, h, layer = 'back', o = {}) => {
     L.props.push({ type, x, y, h, layer, flip: L.chance(0.5), ...o });
     if (o.light) { const [dx, dy, c, i, r, fl] = o.light; L.light(x + dx, y + dy, c, i, r, fl); }
-    if (o.fire) { const s = typeof o.fire === 'number' ? o.fire : 1; L.fire(x - 0.5 * s, y + 1.0 * s, 0.3 * s); L.fire(x + 0.4 * s, y + 0.9 * s, 0.25 * s); L.light(x, y + 1.5 * s, [1.0, 0.45, 0.15], 2.6, 7, 0.35); }
+    if (o.fire) {
+      const s = typeof o.fire === 'number' ? o.fire : 1;
+      const top = y + h * 0.62;
+      L.fire(x - 0.35 * h * s, top, 0.22 * s); L.fire(x + 0.25 * h * s, top - 0.1, 0.18 * s);
+      L.light(x, top + 0.4, [1.0, 0.45, 0.15], 2.0, 6, 0.35);
+    }
   };
+  const WIDE = new Set(['s1_tank_wreck', 's2_gear', 'car_wreck', 's2_pews']);
+  L.recent = [];
   L.decorate = (x0, x1, y = 0, density = 1) => {
-    // twice the old density: a background prop every ~2.5-4.5 m
+    // twice the old density: a background prop every ~2.5-4.5 m, never the same prop twice in a row
     let x = x0 + L.rand(0.6, 2);
     while (x < x1 - 0.6) {
-      const [type, h, , o] = weighted(pool.back);
+      let pickd, tries = 0;
+      do { pickd = weighted(pool.back); tries++; } while (tries < 8 && (L.recent.includes(pickd[0]) || (WIDE.has(pickd[0]) && x1 - x < 7)));
+      const [type, h, , o] = pickd;
+      L.recent.push(type); if (L.recent.length > 3) L.recent.shift();
+      if (WIDE.has(type)) x += 2.5;
       const hh = h * L.rand(0.9, 1.1);
       L.prop(type, x, o?.hang ? y + L.rand(3, 4) : y, hh, 'back', { ...(o || {}) });
-      x += L.rand(2.3, 4.2) / density;
+      x += (L.rand(2.3, 4.2) + (WIDE.has(type) ? 3 : 0)) / density;
     }
     if (L.chance(0.35)) { const [type, h] = weighted(pool.front); L.prop(type, L.rand(x0 + 1, x1 - 1), y, h, 'front'); }
   };
+  L.cover = (x, y = 0) => L.prop(pool.cover[0], x, y, pool.cover[1], 'front');
+  L.box = (x, y = 0) => L.prop(pool.box[0], x, y, pool.box[1], 'back');
   L.barrel = (x, y = 0) => L.prop(pool.explosive[0], x, y, pool.explosive[1], 'back', { explosive: true, hp: 20 });
   return L;
 }
@@ -97,7 +112,7 @@ const CHUNKS = {
     const top = a + 3;
     L.decorate(top, top + 3.5, h2, 0.8);
     L.decorate(x, a, 0, 1);
-    if (L.chance(0.5)) L.prop('sandbags', a + 1.5, h1, 0.9, 'front');
+    if (L.chance(0.5)) L.cover(a + 1.5, h1);
     return w;
   },
   platforms(L, x) {
@@ -108,7 +123,7 @@ const CHUNKS = {
       const px = x + 2 + (i * (w - 6)) / Math.max(1, n - 1 || 1) + L.rand(-0.5, 0.5);
       const py = L.pick([2.4, 2.8, 3.2]);
       L.plat(Math.min(px, x + w - 5.5), py, L.rand(3.5, 5));
-      if (L.chance(0.5)) L.prop('crate', px + 1.5, py, 1.0, 'back');
+      if (L.chance(0.5)) L.box(px + 1.5, py);
     }
     if (n >= 2 && L.chance(0.5)) L.plat(x + w / 2 - 2, 5.2, 4);
     L.decorate(x, x + w);
@@ -147,7 +162,7 @@ const CHUNKS = {
     L.ground(x, x + w);
     const a = x + L.rand(3, 5);
     L.block(a, 0, L.rand(4, 6), L.rand(1.0, 1.4));
-    L.prop('sandbags', a + 0.8, 1.2, 0.9, 'front');
+    L.cover(a + 0.8, 1.2);
     L.barrel(a - 1.2);
     L.decorate(x, x + w);
     L.ev('ambush', a - 3, { spawns: [{ type: L.pick(['grunt', 'shotgunner', 'grenadier']), dx: 9 }, { type: 'grunt', dx: 11, delay: 0.6 }, { type: L.pick(['leaper', 'grunt', 'sniper']), dx: -8, delay: 1.3 }] });

@@ -5,7 +5,7 @@ export const THEMES = {
     music: 'stage1',
     layers: [
       { src: 'assets/bg/stage1/sky.webp', sky: true, h: 12, order: 0, glow: 0.3 },
-      { src: 'assets/bg/stage1/far.webp', factor: 0.12, h: 10.5, y: -1.8, order: 1, tint: [0.85, 0.72, 0.72], fog: 0.42, fogColor: [0.72, 0.32, 0.25], glow: 1.2 },
+      { src: 'assets/bg/stage1/far.webp', factor: 0.12, h: 10.5, y: -1.8, order: 1, tint: [0.72, 0.58, 0.58], fog: 0.4, fogColor: [0.55, 0.2, 0.15], glow: 0.55 },
       { src: 'assets/bg/stage1/mid.webp', factor: 0.38, h: 9, y: -1.8, order: 2, tint: [0.44, 0.35, 0.39], fog: 0.26, fogColor: [0.32, 0.08, 0.07], glow: 1.4, light: 0.3 },
       { src: 'assets/bg/stage1/near.webp', factor: 1.35, h: 4.5, y: -2.1, order: 95, tint: [0.2, 0.12, 0.13], glow: 0.0, opacity: 1 },
     ],

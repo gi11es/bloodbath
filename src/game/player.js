@@ -481,8 +481,10 @@ export class Player {
     rig.headPart = !this.alive ? 'head_hurt' : this.hurt > 0.25 ? 'head_hurt' : shouting ? 'head_shout' : this.blinkT < 0 ? 'head_blink' : 'head';
     rig.tint = this.frenzyActive ? [1.25, 0.85, 0.85] : null;
     rig.emissive = this.frenzyActive ? 0.25 + Math.sin(this.t * 20) * 0.1 : 0;
-    rig.alpha = this.invuln > 0 && this.alive && Math.floor(this.t * 20) % 2 === 0 ? 0.35 : 1;
-    rig.flash = this.flash;
+    // i-frames: a quick shimmer, never a see-through ghost; hurt reads as a red pulse, not a white flash
+    rig.alpha = this.invuln > 0 && this.alive && Math.floor(this.t * 16) % 2 === 0 ? 0.72 : 1;
+    rig.flash = 0;
+    if (this.flash > 0) rig.tint = [1 + this.flash * 0.9, 1 - this.flash * 0.55, 1 - this.flash * 0.55];
     rig.draw(batch);
   }
 }

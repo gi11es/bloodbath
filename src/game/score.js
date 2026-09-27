@@ -13,6 +13,7 @@ export class Score {
     if (this.mult > this.maxMult) this.maxMult = this.mult;
   }
   addBlood(vol, living) {
+    if (!(vol > 0)) return;
     this.litres += vol;
     if (living) this.livingLitres += vol;
     this.recent += vol;

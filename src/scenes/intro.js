@@ -12,9 +12,9 @@ const PANELS = [
   { src: 'assets/intro/panel_4.webp', voice: 'narr_4', text: 'But one soldier still bleeds red.', pan: [0.0, 0.02, 0.0, -0.02], zoom: [1.2, 1.08], fx: 'rainEmbers' },
   { src: 'assets/intro/panel_5.webp', voice: 'narr_5', text: 'It is time to give it all back.', pan: [0.02, 0.0, -0.01, 0.0], zoom: [1.04, 1.16], fx: 'embers' },
 ];
-const PANEL_T = 12.2;
-const LOGO_AT = 64.9;
-const END_AT = 70;
+const PANEL_T = 13.17; // 5 panels end on the music's big hit at 65.46 s
+const LOGO_AT = PANELS.length * PANEL_T - 0.9; // scene time starts 0.5 s after the music
+const END_AT = LOGO_AT + 5;
 
 export class IntroScene {
   constructor(app, onDone) {
@@ -97,7 +97,7 @@ export class IntroScene {
       void this.sub.offsetWidth;
       this.sub.classList.add('show');
     }, 900);
-    setTimeout(() => { if (this.sub.textContent === text.replace(/\s+/g, ' ')) this.sub.classList.remove('show'); }, 9800);
+    setTimeout(() => { if (this.sub.textContent === text.replace(/\s+/g, ' ')) this.sub.classList.remove('show'); }, 10800);
   }
   render(dt) {
     const u = this.mat.uniforms;

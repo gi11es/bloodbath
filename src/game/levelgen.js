@@ -50,7 +50,7 @@ function makeBuilder(theme, seed) {
   L.ev = (type, x, o = {}) => L.events.push({ type, x, ...o });
   L.light = (x, y, color, intensity, radius, flicker = 0) => L.lights.push({ x, y, color, intensity, radius, flicker });
   L.fire = (x, y, s = 0.3) => L.fires.push({ x, y, s });
-  L.hint = (x, text) => L.hints.push({ x, text });
+  L.hint = (x, text, touch) => L.hints.push({ x, text, touch });
   const pool = POOLS[theme];
   const weighted = (list) => {
     const tot = list.reduce((a, p) => a + p[2], 0);
@@ -154,7 +154,7 @@ const CHUNKS = {
     L.block(a + 3.2, 0, L.rand(3, 4), hWall - L.rand(1.5, 2));
     L.decorate(x, a - 0.5);
     L.decorate(a + 7, x + w);
-    L.hint(a - 3, 'JUMP INTO A WALL TO WALL-SLIDE, JUMP AGAIN TO WALL-JUMP');
+    L.hint(a - 3, 'JUMP INTO A WALL TO WALL-SLIDE, JUMP AGAIN TO WALL-JUMP', 'HOLD TOWARD A WALL IN THE AIR TO SLIDE, TAP JUMP TO WALL-JUMP');
     return w;
   },
   bunker(L, x) {
@@ -204,9 +204,9 @@ export function generateStage(stageId, seed = (Math.random() * 2 ** 31) | 0) {
   L.ground(x, 18);
   L.decorate(2, 18);
   if (stageId === 'stage1') {
-    L.hint(2, 'A / D  MOVE     SPACE  JUMP (x2)     MOUSE  AIM     LMB  SHOOT');
-    L.hint(9, 'SHIFT  DASH (invulnerable)     RMB  MACHETE (deflects bolts)');
-    L.hint(15, 'Q  GRENADE     S + SPACE  DROP     E  EXECUTE bleeding enemies');
+    L.hint(2, 'A / D  MOVE     SPACE  JUMP (x2)     MOUSE  AIM     LMB  SHOOT', 'LEFT THUMB  MOVE     JUMP x2     YOU AUTO-FIRE AT THE LOCKED TARGET');
+    L.hint(9, 'SHIFT  DASH (invulnerable)     RMB  MACHETE (deflects bolts)', 'DASH = INVULNERABLE     BLADE DEFLECTS BOLTS     DRAG FIRE TO AIM BY HAND');
+    L.hint(15, 'Q  GRENADE     S + SPACE  DROP     E  EXECUTE bleeding enemies', 'STICK DOWN + JUMP  DROP     BLADE BECOMES EXECUTE NEXT TO BLEEDING ENEMIES');
   }
   x = 18;
   let last = null;

@@ -19,7 +19,8 @@ export class GameCamera {
     this.time = 0;
     this.roll = 0;
   }
-  resize(aspect) { this.aspect = aspect; }
+  // keep ~16 m of world visible horizontally: ultra-wide phones zoom in instead of seeing more
+  resize(aspect) { this.aspect = aspect; this.baseViewH = clamp(16 / aspect, 6.6, 9) / (this.zoomMul || 1); }
   get viewW() { return this.viewH * this.aspect; }
   shake(a) { this.trauma = Math.min(1.2, this.trauma + a * settings.screenShake); }
   kick(dx, dy) { this.kx += dx * settings.screenShake; this.ky += dy * settings.screenShake; }

@@ -36,7 +36,7 @@ export class IntroScene {
   enter() {
     this.el = document.createElement('div');
     this.el.className = 'screen intro';
-    this.el.innerHTML = `<div class="bars top"></div><div class="bars bottom"></div><div class="subtitle"></div><div class="skip">PRESS ESC TO SKIP</div><div class="intro-logo"><img src="assets/ui/logo.webp" alt="BLOODBATH"></div>`;
+    this.el.innerHTML = `<div class="bars top"></div><div class="bars bottom"></div><div class="subtitle"></div><div class="skip">${document.body.classList.contains('touch') ? 'TAP TO SKIP' : 'PRESS ESC TO SKIP'}</div><div class="intro-logo"><img src="assets/ui/logo.webp" alt="BLOODBATH"></div>`;
     this.app.ui.appendChild(this.el);
     this.sub = this.el.querySelector('.subtitle');
     const fx = this.app.pipeline.fx;
@@ -60,7 +60,7 @@ export class IntroScene {
   update(dt, inp) {
     if (!this.started) return;
     this.t += dt;
-    if (this.t > 1 && (inp.pressed.has('Escape') || inp.pressed.has('Enter') || inp.pressed.has('Space') || inp.hit('pause'))) this.finish();
+    if (this.t > 1 && (inp.pressed.has('Tap') || inp.pressed.has('Escape') || inp.pressed.has('Enter') || inp.pressed.has('Space') || inp.hit('pause'))) this.finish();
     if (this.t > END_AT) this.finish();
     const i = Math.floor(this.t / PANEL_T);
     if (i !== this.idx && i < PANELS.length && this.t >= 0) {

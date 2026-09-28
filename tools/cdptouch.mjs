@@ -1,0 +1,16 @@
+import { chromium, devices } from 'playwright';
+const browser = await chromium.launch({ headless: true });
+const ctx = await browser.newContext({ ...devices['iPhone 15 Pro landscape'] });
+const page = await ctx.newPage();
+await page.setContent('<div style="position:fixed;inset:0"></div>');
+await page.evaluate(() => { window.log = []; for (const t of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) window.addEventListener(t, (e) => window.log.push(t + ' changed=' + [...e.changedTouches].map((x) => x.identifier) + ' active=' + [...e.touches].map((x) => x.identifier)), { passive: false }); });
+const cdp = await ctx.newCDPSession(page);
+const S = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts });
+await S('touchStart', [{ id: 1, x: 100, y: 200 }]);
+await S('touchStart', [{ id: 1, x: 100, y: 200 }, { id: 2, x: 600, y: 250 }]);
+await S('touchMove', [{ id: 1, x: 100, y: 200 }]);
+await S('touchMove', [{ id: 1, x: 140, y: 200 }]);
+await S('touchEnd', [{ id: 1, x: 140, y: 200 }, { id: 2, x: 600, y: 250 }].slice(0, 1));
+await S('touchEnd', []);
+console.log((await page.evaluate(() => window.log)).join('\n'));
+await browser.close();

@@ -24,16 +24,17 @@ export class Hud {
       </div>
       <div class="announce-wrap"></div>
       <div class="hint"></div>
-      <div class="prompt">[E] EXECUTE</div>
+      <div class="prompt">${document.body.classList.contains('touch') ? 'EXECUTE!' : '[E] EXECUTE'}</div>
       <div class="go">GO <span>&#10148;</span></div>
       <div class="arena-bar"><label></label><div class="ab"><div class="ab-fill"></div></div><small></small></div>
       <div class="edge-arrow left">&#9664;</div><div class="edge-arrow right">&#9654;</div>
       <div class="bossbar"><label></label><div class="bb"><div class="bb-fill"></div><div class="bb-lag"></div></div></div>
-      <div class="continue"><div>CONTINUE?</div><b>9</b><small>PRESS FIRE</small></div>
+      <div class="continue"><div>CONTINUE?</div><b>9</b><small>${document.body.classList.contains('touch') ? 'TAP TO CONTINUE' : 'PRESS FIRE'}</small></div>
       <div class="mission-card"><div class="mc-name"></div><div class="mc-sub"></div></div>
       <div class="warning"><div class="w-stripe"></div><div class="w-text">WARNING</div><div class="w-sub">A HUGE ENEMY IS APPROACHING</div><div class="w-stripe"></div></div>
       <div class="director-overlay"></div>
       <div class="reticle"><i></i><i></i><i></i><i></i></div>
+      <div class="lockon"><i></i><i></i><i></i><i></i></div>
     `;
     this.q = (s) => this.root.querySelector(s);
     this.hpFill = this.q('.hp-fill'); this.hpNum = this.q('.hp-num');
@@ -48,6 +49,7 @@ export class Hud {
     this.arenaEl = this.q('.arena-bar'); this.arenaFill = this.q('.ab-fill');
     this.arrowL = this.q('.edge-arrow.left'); this.arrowR = this.q('.edge-arrow.right');
     this.reticle = this.q('.reticle');
+    this.lockEl = this.q('.lockon');
     this.canvas = el('canvas', 'splatter');
     this.root.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
@@ -150,6 +152,9 @@ export class Hud {
   }
 
   // write to the DOM only when the value actually changes
+  // text follows the device; the lock-on marker follows whether the controls are live
+  touchMode() { return document.body.classList.contains('touch'); }
+
   setText(el, v) { if (el.__v !== v) { el.__v = v; el.textContent = v; } }
   setHTML(el, v) { if (el.__h !== v) { el.__h = v; el.innerHTML = v; } }
   setStyle(el, k, v) { const key = '__s' + k; if (el[key] !== v) { el[key] = v; el.style[k] = v; } }
@@ -201,11 +206,13 @@ export class Hud {
     // tutorial hints
     const hints = g.level.hints || [];
     let hi = -1;
-    for (let i = 0; i < hints.length; i++) if (P.x > hints[i].x - 1 && P.x < hints[i].x + 11) hi = i;
-    if (hi !== this.hintIdx) {
-      this.hintIdx = hi;
+    // tutorial hints only while exploring: they would clutter an arena fight
+    if (!g.arena && g.state === 'play') for (let i = 0; i < hints.length; i++) if (P.x > hints[i].x - 1 && P.x < hints[i].x + 11) hi = i;
+    const hk = hi + (this.touchMode() ? 't' : 'k');
+    if (hk !== this.hintIdx) {
+      this.hintIdx = hk;
       this.hintEl.classList.remove('show');
-      if (hi >= 0) { this.hintEl.textContent = hints[hi].text; void this.hintEl.offsetWidth; this.hintEl.classList.add('show'); }
+      if (hi >= 0) { this.hintEl.textContent = (this.touchMode() && hints[hi].touch) || hints[hi].text; void this.hintEl.offsetWidth; this.hintEl.classList.add('show'); }
     }
     // boss bar lag
     if (this.bossFrac !== undefined) {
@@ -213,9 +220,16 @@ export class Hud {
       this.bossFill.style.transform = `scaleX(${this.bossFrac})`;
       this.bossLag.style.transform = `scaleX(${this.bossLagV})`;
     }
-    // reticle
+    // reticle (mouse) or lock-on marker (touch aim assist)
     const inp = g.app.input;
-    const show = !inp.usingPad && inp.lastAimSource === 'mouse' && P.alive;
+    const touch = this.touchMode();
+    const lock = touch && inp.touch && inp.touch.visible && P.alive && P.autoTarget && !inp.touch.aim;
+    this.lockEl.style.display = lock ? 'block' : 'none';
+    if (lock) {
+      const sp = g.worldToScreen(P.autoTarget.x, P.autoTarget.y);
+      this.lockEl.style.transform = `translate(${sp.x}px, ${sp.y}px)`;
+    }
+    const show = !touch && !inp.usingPad && inp.lastAimSource === 'mouse' && P.alive;
     this.reticle.style.display = show ? 'block' : 'none';
     if (show) {
       const spread = 8 + P.recoil * 10 + (P.weapon.spread * 120);

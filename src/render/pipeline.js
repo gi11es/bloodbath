@@ -2,6 +2,7 @@
 // full-resolution grade (tonemap, vignette, grain, chromatic aberration, CRT, damage/frenzy tints).
 import * as THREE from 'three';
 import { settings } from '../core/settings.js';
+import { isMobile } from '../core/device.js';
 
 const FS_VERT = /* glsl */ `
 varying vec2 vUv;
@@ -164,7 +165,9 @@ export class Pipeline {
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     container.appendChild(this.renderer.domElement);
     this.canvas = this.renderer.domElement;
-    const rtOpts = { type: THREE.HalfFloatType, depthBuffer: false, stencilBuffer: false };
+    const gl = this.renderer.getContext();
+    const hdr = !!(gl.getExtension('EXT_color_buffer_float') || gl.getExtension('EXT_color_buffer_half_float'));
+    const rtOpts = { type: hdr ? THREE.HalfFloatType : THREE.UnsignedByteType, depthBuffer: false, stencilBuffer: false };
     this.sceneRT = new THREE.WebGLRenderTarget(4, 4, { ...rtOpts, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter });
     this.bloodRT = new THREE.WebGLRenderTarget(4, 4, { ...rtOpts, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
     this.bloomRTs = [];
@@ -226,11 +229,12 @@ export class Pipeline {
   resize() {
     const w = window.innerWidth, h = window.innerHeight;
     this.width = w; this.height = h;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 2);
     this.renderer.setSize(w, h, true);
     this.renderer.setPixelRatio(dpr);
     const ps = settings.pixelScale;
-    let ih = ps === 'retro' ? 360 : ps === 'hibit' ? 540 : Math.min(1440, Math.round(h * dpr));
+    // phones: the scene renders at most 720 lines (post-processing stays at full resolution)
+    let ih = ps === 'retro' ? 360 : ps === 'hibit' ? 540 : Math.min(isMobile ? 720 : 1440, Math.round(h * dpr));
     ih = Math.min(ih, Math.round(h * dpr));
     const iw = Math.round(ih * (w / h));
     this.iw = iw; this.ih = ih;

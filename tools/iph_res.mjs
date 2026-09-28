@@ -1,0 +1,18 @@
+import { webkit, devices } from 'playwright';
+const browser = await webkit.launch();
+const ctx = await browser.newContext({ ...devices['iPhone 15 Pro landscape'] });
+const page = await ctx.newPage();
+await page.goto('http://localhost:5173/?stage=stage1&god=1');
+await page.waitForTimeout(600);
+await page.screenshot({ path: '/tmp/ipr_loading.png' });
+await page.waitForTimeout(5000);
+await page.evaluate(() => { const g = window.__app.game, P = g.player; for (let i = 0; i < 4; i++) g.spawnEnemy('grunt', P.x + 4 + i, 0); });
+await page.waitForTimeout(4000);
+await page.evaluate(() => window.__app.game.stageClear());
+await page.waitForTimeout(10000);
+await page.screenshot({ path: '/tmp/ipr_results.png' });
+await page.evaluate(() => window.__app.toIntro()); await page.waitForTimeout(6000);
+await page.screenshot({ path: '/tmp/ipr_intro.png' });
+await page.touchscreen.tap(300, 150); await page.waitForTimeout(2000);
+console.log('after tap in intro:', await page.evaluate(() => [...document.querySelectorAll('.screen:not(.out)')].map((e) => e.className).join('|')));
+await browser.close();

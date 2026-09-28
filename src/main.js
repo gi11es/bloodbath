@@ -10,6 +10,8 @@ import { Menus } from './ui/menus.js';
 import { IntroScene } from './scenes/intro.js';
 import { TitleScene } from './scenes/title.js';
 import { Bot } from './dev/bot.js';
+import { TouchControls } from './ui/touch.js';
+import { isTouchDevice } from './core/device.js';
 
 class App {
   constructor() {
@@ -26,6 +28,12 @@ class App {
     this.loop.onUpdate = (dt) => this.update(dt);
     this.loop.onRender = (dt) => this.render(dt);
     this.pipeline.onResize = () => { if (this.game) this.game.cam.resize(this.pipeline.width / this.pipeline.height); };
+    if (isTouchDevice) this.touch = new TouchControls(this);
+    this.rotateEl = document.createElement('div');
+    this.rotateEl.className = 'rotate-hint';
+    this.rotateEl.innerHTML = '<div class="phone"></div><b>ROTATE YOUR DEVICE</b><small>BLOODBATH IS PLAYED IN LANDSCAPE</small>';
+    document.body.appendChild(this.rotateEl);
+    window.addEventListener('resize', () => this.checkOrientation());
     window.__app = this;
     window.__audio = audio;
     window.__settings = settings;
@@ -46,6 +54,10 @@ class App {
       window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock);
     };
     window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
+    // iOS only starts WebAudio from a completed gesture (touchend / pointerup)
+    const iosUnlock = () => { audio.resume(); if (audio.ctx && audio.ctx.state === 'running') { window.removeEventListener('touchend', iosUnlock); window.removeEventListener('pointerup', iosUnlock); } };
+    window.addEventListener('touchend', iosUnlock); window.addEventListener('pointerup', iosUnlock);
+    this.checkOrientation();
     const stage = this.params.get('stage');
     const screen = this.params.get('screen');
     if (stage) return this.startStage(stage, null);
@@ -115,6 +127,12 @@ class App {
     this.menus.results({ ...result, isRecord, next, onNext: () => this.startStage(next, result.carry), onRetry: () => this.startStage(stage, this.currentCarry), onTitle: () => this.toTitle() });
   }
 
+  checkOrientation() {
+    const portrait = isTouchDevice && innerHeight > innerWidth;
+    document.body.classList.toggle('is-portrait', portrait);
+    if (portrait && this.game && !this.paused && this.game.state !== 'loading') this.pause(true);
+  }
+
   pause(on) {
     if (!this.game) return;
     this.paused = on;
@@ -142,6 +160,7 @@ class App {
 
   render(dt) {
     this.input.pollPad();
+    if (this.touch) this.touch.update();
     if (this.game && this.game.state !== 'loading') this.game.render(this.paused ? 0 : dt);
     else if (this.scene && this.scene.render) this.scene.render(dt);
     else { this.pipeline.renderer.setRenderTarget(null); this.pipeline.renderer.setClearColor(0x000000, 1); this.pipeline.renderer.clear(); }

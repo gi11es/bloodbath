@@ -104,7 +104,26 @@ export class Menus {
       refresh();
       const e = { it, row, refresh };
       row.addEventListener('mouseenter', () => this.focus(m, entries.indexOf(e)));
-      row.addEventListener('click', (ev) => { ev.stopPropagation(); this.focus(m, entries.indexOf(e)); this.activate(m, 1); });
+      row.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        this.focus(m, entries.indexOf(e));
+        // sliders: tap/click on the bar sets the value directly; choices: tap the left third to go back
+        if (it.type === 'slider') {
+          const bar = row.querySelector('.val i');
+          const r = bar && bar.getBoundingClientRect();
+          if (r && r.width) {
+            const v = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * (it.max ?? 1);
+            it.set(Math.round(v * 20) / 20); e.refresh(); audio.sfx('ui_move', { vol: 0.5 });
+            return;
+          }
+        }
+        if (it.type === 'choice') {
+          const r = row.getBoundingClientRect();
+          this.activate(m, ev.clientX < r.left + r.width * 0.55 && ev.clientX > r.left + r.width * 0.3 ? -1 : 1);
+          return;
+        }
+        this.activate(m, 1);
+      });
       list.appendChild(row);
       entries.push(e);
     }
@@ -159,6 +178,13 @@ export class Menus {
     this.ui.appendChild(overlay);
     const m = this.menu({ ...opts, parent: overlay });
     m.overlay = overlay;
+    // touch-friendly ways out: a close button, and a tap on the backdrop
+    if (opts.onBack) {
+      const x = h(`<button class="menu-close" aria-label="Close">&times;</button>`);
+      x.addEventListener('click', (ev) => { ev.stopPropagation(); audio.sfx('ui_back', { vol: 0.6 }); opts.onBack(); });
+      m.el.appendChild(x);
+      overlay.addEventListener('click', (ev) => { if (ev.target === overlay) { audio.sfx('ui_back', { vol: 0.6 }); opts.onBack(); } });
+    }
     return m;
   }
 
@@ -234,7 +260,11 @@ export class Menus {
       { label: 'PIXEL LOOK', ...choice('pixelScale', [['hd', 'HD (SMOOTH)'], ['hibit', 'HI-BIT'], ['retro', 'RETRO']], () => this.app.pipeline.resize()) },
       { label: 'CRT FILTER', ...choice('crt', [[false, 'OFF'], [true, 'ON']]) },
       { label: 'DIRECTOR OVERLAY', ...choice('directorOverlay', [[false, 'OFF'], [true, 'ON']]) },
-      { label: 'FULLSCREEN', action: () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); } },
+      ...(document.body.classList.contains('touch') ? [
+        { label: 'TOUCH AUTO-FIRE', ...choice('touchAutoFire', [[true, 'ON'], [false, 'OFF']]) },
+        { label: 'TOUCH BUTTON SIZE', ...choice('touchScale', [[0.85, 'SMALL'], [1, 'MEDIUM'], [1.18, 'LARGE']], (v) => document.documentElement.style.setProperty('--tscale', v)) },
+      ] : []),
+      document.documentElement.requestFullscreen ? { label: 'FULLSCREEN', action: () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); } } : { label: 'FULLSCREEN', hint: 'ADD TO HOME SCREEN', disabled: true },
       { sep: true },
       { label: 'BACK', action: () => this.pop() },
     ];
@@ -250,7 +280,14 @@ export class Menus {
       ['SLIDE', 'S WHILE RUNNING', 'DOWN WHILE RUNNING'], ['DROP THROUGH', 'S + SPACE', 'DOWN + A'], ['GRENADE', 'Q / G', 'LB'],
       ['EXECUTE (BLEEDING ENEMY)', 'E', 'Y'], ['FRENZY', 'F / R', 'RB'], ['PAUSE', 'ESC / P', 'START'], ['DIRECTOR OVERLAY', 'F3', '—'],
     ];
-    const tbl = h(`<div class="ctl-table"><div class="ctl-head"><span>ACTION</span><span>KEYBOARD + MOUSE</span><span>GAMEPAD</span></div>${rows.map((r) => `<div class="ctl-row"><span>${r[0]}</span><span>${r[1]}</span><span>${r[2]}</span></div>`).join('')}</div>`);
+    const touchRows = [
+      ['MOVE', 'LEFT THUMB ANYWHERE ON THE LEFT HALF'], ['CROUCH / SLIDE / DROP', 'PULL THE STICK DOWN (+ JUMP TO DROP)'], ['AIM', 'AUTOMATIC LOCK-ON  ·  DRAG ON FIRE TO AIM BY HAND'],
+      ['SHOOT', 'AUTO-FIRE AT THE LOCKED TARGET, OR HOLD FIRE'], ['JUMP', 'JUMP (TAP AGAIN IN THE AIR = DOUBLE JUMP)'], ['DASH', 'DASH (INVULNERABLE)'],
+      ['MACHETE', 'BLADE (DEFLECTS BOLTS)'], ['EXECUTE', 'BLADE TURNS INTO EXECUTE NEXT TO A BLEEDING ENEMY'], ['GRENADE', 'NADE'], ['FRENZY', 'FRENZY APPEARS WHEN THE BAR IS FULL'], ['PAUSE', 'II BUTTON AT THE TOP'],
+    ];
+    const tbl = document.body.classList.contains('touch')
+      ? h(`<div class="ctl-table touch-table"><div class="ctl-head"><span>ACTION</span><span>TOUCH SCREEN</span></div>${touchRows.map((r) => `<div class="ctl-row"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div>`)
+      : h(`<div class="ctl-table"><div class="ctl-head"><span>ACTION</span><span>KEYBOARD + MOUSE</span><span>GAMEPAD</span></div>${rows.map((r) => `<div class="ctl-row"><span>${r[0]}</span><span>${r[1]}</span><span>${r[2]}</span></div>`).join('')}</div>`);
     m.el.insertBefore(tbl, m.el.querySelector('.items'));
   }
 
@@ -291,7 +328,7 @@ export class Menus {
     if (this.stack.some((m) => m.opts.cls === 'sub confirm')) return;
     this.push({
       title: 'QUIT TO TITLE?', cls: 'sub confirm', modal: true,
-      footer: 'ESC OR ENTER TO QUIT &middot; PROGRESS IN THIS MISSION IS LOST',
+      footer: document.body.classList.contains('touch') ? 'PROGRESS IN THIS MISSION IS LOST' : 'ESC OR ENTER TO QUIT &middot; PROGRESS IN THIS MISSION IS LOST',
       items: [
         { label: 'YES, QUIT', action: () => { this.clearPause(); this.app.toTitle(); } },
         { label: 'NO, KEEP BLEEDING THEM', action: () => this.pop() },

@@ -20,6 +20,19 @@ A gory run-and-gun for the browser, built with three.js. It has a Metal Slug fee
 | Pause (Esc again to quit) | Esc | Start |
 | AI Director overlay | F3 | — |
 
+### Touch screens (phones and tablets, landscape)
+
+| Action | Touch |
+|---|---|
+| Move, crouch, slide, drop | Floating stick: put your left thumb anywhere on the left half and pull it down to crouch, slide or drop |
+| Aim and shoot | Lock-on aim assist with auto-fire (can be turned off in Options). Drag on FIRE to aim by hand |
+| Jump, double jump, wall jump | JUMP |
+| Dash, machete, grenade | DASH, BLADE, NADE. BLADE turns into EXECUTE next to a bleeding enemy |
+| Frenzy | The FRENZY button appears when the bar is full |
+| Pause | The II button at the top |
+
+On iPhone, use *Share → Add to Home Screen* to play fullscreen.
+
 ## Features
 
 - **Blood is the score.** Wounds keep bleeding with the heartbeat. Limbs sever and leak. Blood pools on floors, and fresh blood heals you.

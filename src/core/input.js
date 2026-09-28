@@ -77,6 +77,7 @@ export class Input {
     for (const b of this.padDown) if (!this.padPrev.has(b)) this.anyPressed = true;
   }
   held(action) {
+    if (this.touch && this.touch.held.has(action)) return true;
     const b = BINDS[action];
     if (b && b.some((c) => this.down.has(c))) return true;
     const pb = PAD[action];
@@ -88,6 +89,7 @@ export class Input {
     return false;
   }
   hit(action) {
+    if (this.touch && this.touch.pressed.has(action)) return true;
     const b = BINDS[action];
     if (b && b.some((c) => this.pressed.has(c))) return true;
     const pb = PAD[action];
@@ -96,6 +98,7 @@ export class Input {
   }
   // horizontal move axis in [-1,1]
   moveX() {
+    if (this.touch && this.touch.move) return this.touch.move;
     if (Math.abs(this.padAxes[0]) > 0.2) return this.padAxes[0];
     return (this.held('right') ? 1 : 0) - (this.held('left') ? 1 : 0);
   }
@@ -106,6 +109,7 @@ export class Input {
     return { x, y: -y };
   }
   endStep() {
+    if (this.touch) this.touch.pressed.clear();
     this.pressed.clear();
     this.released.clear();
     this.padPrev = new Set(this.padDown);

@@ -11,6 +11,8 @@ const DEFAULTS = {
   crt: false,
   directorOverlay: false,
   seenIntro: false,
+  touchAutoFire: true, // touch screens: shoot automatically at the auto-aim target
+  touchScale: 1,
 };
 export const settings = { ...DEFAULTS, ...safeLoad() };
 function safeLoad() {

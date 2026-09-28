@@ -3,6 +3,7 @@
 import { Rig, Ragdoll, J } from './rig.js';
 import { WEAPONS, MELEE } from './weapons.js';
 import { audio } from '../core/audio.js';
+import { settings } from '../core/settings.js';
 import { clamp, rand, lerp } from '../core/math.js';
 
 const RUN = 6.8, ACC_G = 70, ACC_A = 38, JUMP = 12.2, DJUMP = 10.8, GRAV = 33, MAXFALL = 19;
@@ -179,7 +180,22 @@ export class Player {
     // ---- aim
     const sh = [this.rig.jx(J.shoulder), this.rig.jy(J.shoulder)];
     const padAim = input.padAim();
-    if (padAim && input.lastAimSource === 'pad') this.aim = Math.atan2(padAim.y, padAim.x);
+    this.autoTarget = null;
+    if (input.touch && input.touch.visible) {
+      // touch: a fire-pad drag aims by hand; otherwise aim assist locks the best target
+      const t = input.touch;
+      if (t.aim) this.aim = Math.atan2(t.aim.y, t.aim.x);
+      else {
+        const tgt = g.autoAimTarget(this);
+        this.autoTarget = tgt;
+        if (tgt) this.aim = Math.atan2(tgt.y - sh[1], tgt.x - sh[0]);
+        else {
+          const mxT = input.moveX();
+          const fwd = mxT ? (mxT > 0 ? 1 : -1) : this.f;
+          this.aim = t.stickY < -0.62 ? (mxT ? (fwd > 0 ? 0.785 : Math.PI - 0.785) : Math.PI / 2) : fwd > 0 ? 0 : Math.PI;
+        }
+      }
+    } else if (padAim && input.lastAimSource === 'pad') this.aim = Math.atan2(padAim.y, padAim.x);
     else if (input.lastAimSource === 'keys' || (input.usingPad && !padAim)) {
       const up = input.held('up'), down = input.held('down') && !b.grounded;
       const mx = input.moveX();
@@ -342,7 +358,8 @@ export class Player {
     if (this.throwT >= 0) { this.throwT += dt * 3.5; if (this.throwT > 1) this.throwT = -1; }
     // fire
     this.cool -= dt;
-    if (input.held('fire') && this.meleeT < 0 && this.cool <= 0) this.fire();
+    const autoFire = input.touch && input.touch.visible && settings.touchAutoFire && this.autoTarget && !input.touch.aim;
+    if ((input.held('fire') || autoFire) && this.meleeT < 0 && this.cool <= 0) this.fire();
 
     // blood absorption heals
     if (b.grounded && this.hp < this.hpMax) {

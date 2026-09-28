@@ -105,7 +105,7 @@ export class Game {
     this.cam.snap(L.spawn.x + 4, 3);
     const zp = new URLSearchParams(location.search).get('zoom');
     this.tightCam = !!new URLSearchParams(location.search).get('tight');
-    if (zp) this.cam.baseViewH = 9 / Number(zp);
+    if (zp) { this.cam.zoomMul = Number(zp); this.cam.baseViewH = 9 / Number(zp); }
     this.godMode = !!new URLSearchParams(location.search).get('god');
     delete settings.godMode;
     this.hud = new Hud(this.app.ui, this);
@@ -437,6 +437,39 @@ export class Game {
     P.frenzy = Math.min(1, P.frenzy + 0.04);
   }
 
+  // Aim assist for touch screens: the most threatening visible target, favouring the way the
+  // hero is moving and facing. Returns an aim point {x, y} or null.
+  autoAimTarget(P) {
+    const c = this.cam;
+    let best = null, bs = Infinity;
+    const mx = Math.sign(this.app.input.moveX() || P.f);
+    const mz = [P.rig.jx(J.shoulder), P.rig.jy(J.shoulder) - 0.25];
+    const consider = (x, y, bonus, e) => {
+      if (Math.abs(x - c.cx) > c.viewW / 2 + 0.3 || Math.abs(y - c.cy) > c.viewH / 2 + 0.3) return;
+      const dx = x - P.cx, dy = y - P.cy;
+      const d = Math.hypot(dx, dy);
+      if (d > 14) return;
+      // line of sight from the gun: skip targets behind walls and cover
+      if (this.world.raycast(mz[0], mz[1], x, y)) return;
+      let score = d + (Math.sign(dx) !== mx ? 3.5 : 0) - bonus;
+      if (e === P.lastAuto) score -= 1.2; // stickiness: do not flick between targets
+      if (score < bs) { bs = score; best = { x, y, e }; }
+    };
+    for (const e of this.enemies) {
+      if (!e.alive) continue;
+      const threat = e.state === 'aim' || e.state === 'windup' || e.state === 'crouch' ? 2 : 0;
+      consider(e.cx, e.cy + (e.body ? e.body.h * 0.12 : 0), threat, e);
+    }
+    if (this.boss && this.boss.alive) {
+      const b = this.boss;
+      if (!b.tankBroken) { const [tx, ty] = b.tankPos(); consider(tx, ty, 1, b); }
+      else consider(b.cx, b.cy + 0.8, 1, b);
+    }
+    for (const pr of this.props) if (pr.hp && !pr.broken && pr.explosive) consider(pr.x, pr.y + 0.6, -1.5, pr);
+    P.lastAuto = best ? best.e : null;
+    return best;
+  }
+
   executableNear(P) {
     let best = null, bd = 2.0;
     for (const e of this.enemies) {
@@ -608,8 +641,11 @@ export class Game {
     // camera
     const lookX = Math.cos(P.aim) * 2.0 + P.body.vx * 0.15;
     const lookY = Math.sin(P.aim) * 0.9;
-    const camB = this.arena ? { x0: this.arena.x0, x1: this.arena.x1, y0: -1.6, y1: 13 } : { x0: this.level.bounds.x0, x1: this.level.bounds.x1, y0: -1.6, y1: 13 };
-    const ty = Math.max(this.cam.viewH / 2 - 1.5, P.body.y + 2.3 * this.cam.viewH / 9);
+    // touch screens: frame the ground higher so the fight stays above the thumb buttons
+    const touchCam = !!(this.app.input.touch && this.app.input.touch.visible);
+    const floorView = touchCam ? 2.3 : 1.6;
+    const camB = this.arena ? { x0: this.arena.x0, x1: this.arena.x1, y0: -floorView, y1: 13 } : { x0: this.level.bounds.x0, x1: this.level.bounds.x1, y0: -floorView, y1: 13 };
+    const ty = Math.max(this.cam.viewH / 2 - floorView + 0.1, P.body.y + (touchCam ? 1.6 : 2.3) * this.cam.viewH / 9);
     if (this.tightCam) { this.cam.snap(P.body.x, P.body.y + 1.0); }
     else {
       this.cam.follow(P.body.x, ty, lookX, lookY, pdt || dt * 0.2, camB);

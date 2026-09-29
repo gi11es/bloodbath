@@ -208,7 +208,7 @@ export class Menus {
   title() {
     this.clear();
     const layer = h(`<div class="screen title-screen">
-      <div class="title-logo"><img src="assets/ui/logo.webp" alt="BLOODBATH"><div class="logo-glow"></div></div>
+      <div class="title-logo"><div class="logo-layout" role="img" aria-label="BLOODBATH"></div><div class="logo-glow"></div></div>
       <div class="title-menu"></div>
       <div class="title-foot"><span>&copy; 2026 SANGUINE SOFTWORKS</span><span class="rec"></span><span>v1.0</span></div>
     </div>`);

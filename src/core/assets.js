@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { maxTextureDim } from './device.js';
+import { isMobile, maxTextureDim } from './device.js';
+import { mobileArt } from './mobile_art.js';
 
 const loader = new THREE.TextureLoader();
 const cache = new Map();
@@ -17,10 +18,11 @@ function getPlaceholder() {
 
 // Returns a promise of a texture; missing files resolve to a transparent placeholder.
 export function loadTexture(url, { srgb = true, repeat = false, mipmaps = true } = {}) {
-  const key = url + (repeat ? '#r' : '');
+  const source = isMobile && mobileArt.has(url) ? url.replace(/\.webp$/, '_m.webp') : url;
+  const key = source + (repeat ? '#r' : '');
   if (cache.has(key)) return cache.get(key);
   const p = new Promise((resolve) => {
-    loader.load(url, (t) => {
+    loader.load(source, (t) => {
       // phones: downscale huge paintings once at load to keep GPU memory reasonable
       const img = t.image;
       if (img && Math.max(img.width, img.height) > maxTextureDim) {
@@ -38,7 +40,7 @@ export function loadTexture(url, { srgb = true, repeat = false, mipmaps = true }
       t.generateMipmaps = mipmaps;
       t.minFilter = mipmaps ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
       resolve(t);
-    }, undefined, () => { console.warn('missing texture', url); resolve(getPlaceholder()); });
+    }, undefined, () => { console.warn('missing texture', source); resolve(getPlaceholder()); });
   });
   cache.set(key, p);
   return p;

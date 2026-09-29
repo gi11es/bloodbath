@@ -13,8 +13,11 @@ class AudioManager {
     this.duckLevel = 1;
   }
 
-  async init() {
-    if (this.ctx) return;
+  init() {
+    return this.initPromise ||= this.setup();
+  }
+
+  async setup() {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     this.ctx = new Ctx();
     const c = this.ctx;
@@ -70,6 +73,17 @@ class AudioManager {
     for (const v of Object.values(this.manifest.voice || {})) all.push(v.src);
     let done = 0;
     await Promise.all(all.map((s) => this.load(s).then(() => onProgress && onProgress(++done / all.length))));
+  }
+
+  async preload(sfxIds = [], voiceIds = []) {
+    await this.init();
+    const sources = new Set();
+    for (const id of sfxIds) for (const src of this.manifest.sfx?.[id] || []) sources.add(src);
+    for (const id of voiceIds) {
+      const src = this.manifest.voice?.[id]?.src;
+      if (src) sources.add(src);
+    }
+    await Promise.all([...sources].map((src) => this.load(src)));
   }
 
   // Play a sound effect by id. opts: vol, rate, pan (-1..1), detune (cents random range), minGap (s)
@@ -162,6 +176,9 @@ class AudioManager {
   }
 
   stopMusic(fade = 1) {
+    // A track may still be downloading; an old title track must never start
+    // after a stage transition has already requested different music.
+    this.musicToken = null;
     if (!this.music || !this.ctx) return;
     const { src, gain } = this.music;
     const t = this.ctx.currentTime;

@@ -22,7 +22,8 @@ export class TitleScene {
     this.fx = new Particles(this.scene);
     this.logo = new BloodLogo(this.scene);
     this.mx = 0; this.my = 0;
-    loadTexture('assets/ui/title_bg.webp', { mipmaps: true }).then((t) => { this.tex = t; this.mat.uniforms.tA.value = t; });
+    const backgroundReady = loadTexture('assets/ui/title_bg.webp', { mipmaps: true }).then((t) => { this.tex = t; this.mat.uniforms.tA.value = t; });
+    this.ready = Promise.all([backgroundReady, this.logo.ready]);
   }
   enter() {
     const fx = this.app.pipeline.fx;
@@ -46,7 +47,7 @@ export class TitleScene {
     }
     if (Math.random() < dt * 3) this.fx.smoke(rand(-hw, hw), -hh + rand(0, 1), rand(-0.2, 0.2), 0.3, rand(0.8, 1.5), 6, [0.3, 0.06, 0.05], 0.25);
     this.fx.update(dt, null);
-    this.logo.update(dt, document.querySelector('.title-logo img'), this.cam, w, h);
+    this.logo.update(dt, document.querySelector('.title-logo .logo-layout'), this.cam, w, h);
     this.logo.dim = document.querySelector('.screen.overlay') ? 1 : 0;
   }
   render(dt) {

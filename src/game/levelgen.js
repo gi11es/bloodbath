@@ -37,6 +37,11 @@ const POOLS = {
   },
 };
 
+export function themePropTypes(theme) {
+  const p = POOLS[theme];
+  return [...new Set([...p.back.map((v) => v[0]), ...p.front.map((v) => v[0]), p.cover[0], p.box[0], p.explosive[0]])];
+}
+
 function makeBuilder(theme, seed) {
   const R = mulberry(seed);
   const L = { theme, seed, solids: [], platforms: [], props: [], events: [], lights: [], fires: [], hints: [], pits: [] };

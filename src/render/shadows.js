@@ -1,5 +1,23 @@
 import * as THREE from 'three';
 
+const MAX_COVERS = 12;
+const coverRects = { value: Array.from({ length: MAX_COVERS }, () => new THREE.Vector4()) };
+const coverCount = { value: 0 };
+
+// Foreground cover hides projected shadows on the same floor. Sharing these
+// uniforms across character atlases avoids an extra render pass or draw call.
+export function updateShadowOccluders(props, x0, x1) {
+  let n = 0;
+  for (const p of props) {
+    if (p.layer !== 'front' || p.mesh.visible === false) continue;
+    const left = p.x - p.w / 2, right = p.x + p.w / 2;
+    if (right < x0 || left > x1) continue;
+    coverRects.value[n++].set(left - 0.04, right + 0.04, p.y, 0);
+    if (n === MAX_COVERS) break;
+  }
+  coverCount.value = n;
+}
+
 // The shadow mesh shares each character batch's instance data. Its vertex shader
 // projects the exact animated cutout onto the ground, with a low, oblique cast.
 // This adds one draw call per atlas, no second rig pass or shadow map.
@@ -8,6 +26,8 @@ export function makeProjectedShadowMaterial(mask) {
     uniforms: {
       mask: { value: mask },
       castSlope: { value: new THREE.Vector2(0.5, 0.28) },
+      coverRects,
+      coverCount,
     },
     vertexShader: `
       attribute vec4 iA;
@@ -17,6 +37,7 @@ export function makeProjectedShadowMaterial(mask) {
       varying vec2 vUv;
       varying float vOpacity;
       varying float vCastX;
+      varying float vGround;
       varying vec2 vSupport;
       uniform vec2 castSlope;
       void main() {
@@ -33,6 +54,7 @@ export function makeProjectedShadowMaterial(mask) {
         vUv = iUV.xy + localUv * iUV.zw;
         vOpacity = iShadow.y;
         vCastX = castPos.x;
+        vGround = iShadow.x;
         vSupport = iShadow.zw;
         gl_Position = projectionMatrix * viewMatrix * vec4(castPos, 0.0, 1.0);
       }
@@ -43,13 +65,25 @@ export function makeProjectedShadowMaterial(mask) {
       varying vec2 vUv;
       varying float vOpacity;
       varying float vCastX;
+      varying float vGround;
       varying vec2 vSupport;
+      uniform vec4 coverRects[12]; // x limits, floor height
+      uniform int coverCount;
       void main() {
         if (vOpacity < 0.002 || vCastX < vSupport.x || vCastX > vSupport.y) discard;
+        float coverFade = 1.0;
+        for (int i = 0; i < 12; i++) {
+          if (i >= coverCount) break;
+          vec4 cover = coverRects[i];
+          if (abs(vGround - cover.z) > 0.25) continue;
+          if (vCastX >= cover.x && vCastX <= cover.y) discard;
+          float edgeDistance = max(cover.x - vCastX, vCastX - cover.y);
+          coverFade = min(coverFade, smoothstep(0.0, 0.18, edgeDistance));
+        }
         // The precomputed mask closes internal cutout holes and has a broad soft edge.
         // One texture lookup keeps the shadow cheaper than the old five-tap shader.
         float a = texture2D(mask, vUv).r;
-        gl_FragColor = vec4(0.012, 0.003, 0.008, vOpacity * a * 0.88);
+        gl_FragColor = vec4(0.012, 0.003, 0.008, vOpacity * a * 0.88 * coverFade);
       }
     `,
     transparent: true,

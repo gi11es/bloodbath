@@ -15,7 +15,7 @@ import { THEMES } from './themes.js';
 import { PICKUP_WEAPON } from './weapons.js';
 import { GameCamera } from '../render/camera.js';
 import { Backdrop } from '../render/backdrop.js';
-import { updateProjectedShadow } from '../render/shadows.js';
+import { updateProjectedShadow, updateShadowOccluders } from '../render/shadows.js';
 import { buildTerrain } from '../render/terrain.js';
 import { Particles } from '../render/particles.js';
 import { Lights, lightUniforms, makeEnvMaterial } from '../render/sprites.js';
@@ -60,8 +60,22 @@ export class Game {
   }
 
   async load(onProgress = () => {}) {
-    const names = ['hero', 'grunt', 'leaper', 'butcher', 'boss'];
-    const defs = await Promise.all(names.map((n) => CharacterDef.load(n, n === 'hero' ? 256 : 640)));
+    const qs = new URLSearchParams(location.search).get('seed');
+    this.seed = this.opts.seed ?? (qs ? Number(qs) : (Math.random() * 2 ** 31) | 0);
+    this.level = STAGES[this.stageId](this.seed);
+    this.theme = THEMES[this.level.theme];
+    const L = this.level;
+    this.world = new World(L.solids, L.platforms, L.bounds);
+    // These files are independent. Starting them together removes the old
+    // characters -> scenery -> terrain -> props network waterfall.
+    const names = ['hero', 'grunt', 'leaper', 'butcher', ...(this.stageId === 'boss' ? ['boss'] : [])];
+    const defsReady = Promise.all(names.map((n) => CharacterDef.load(n, n === 'hero' ? 256 : 640)));
+    const droneReady = loadDroneAssets(this.scene);
+    this.backdrop = new Backdrop(this.scene, this.theme);
+    const sceneryReady = Promise.all([this.backdrop.ready, buildTerrain(this.scene, this.world, this.theme), this.buildProps()]);
+    const pickupReady = Promise.all(['h', 's', 'r', 'grenade', 'health'].map(async (k) => [k, await loadTexture(PROP_TEX('pickup_' + k))]));
+    onProgress(0.2);
+    const [defs, droneAssets] = await Promise.all([defsReady, droneReady]);
     this.defs = Object.fromEntries(names.map((n, i) => [n, defs[i]]));
     const order = { boss: 48, butcher: 50, grunt: 51, leaper: 52, hero: 60 };
     for (const n of names) {
@@ -69,24 +83,15 @@ export class Game {
       batch.mesh.renderOrder = order[n];
       this.scene.add(batch.shadowMesh, batch.mesh);
     }
-    this.droneAssets = await loadDroneAssets(this.scene);
+    this.droneAssets = droneAssets;
     this.droneAssets.batch.mesh.renderOrder = 53;
-    onProgress(0.3);
-    const qs = new URLSearchParams(location.search).get('seed');
-    this.seed = this.opts.seed ?? (qs ? Number(qs) : (Math.random() * 2 ** 31) | 0);
-    this.level = STAGES[this.stageId](this.seed);
-    this.theme = THEMES[this.level.theme];
+    onProgress(0.5);
+    await sceneryReady;
+    this.pickupTex = Object.fromEntries(await pickupReady);
+    onProgress(0.8);
     const shadowSlopeX = Math.max(0.18, -(this.theme.rimDir?.[0] ?? -0.55) * 0.9);
     for (const d of Object.values(this.defs)) d.shadowMaterial.uniforms.castSlope.value.set(shadowSlopeX, 0.28);
     this.droneAssets.batch.shadowMesh.material.uniforms.castSlope.value.set(shadowSlopeX, 0.28);
-    const L = this.level;
-    this.world = new World(L.solids, L.platforms, L.bounds);
-    this.backdrop = new Backdrop(this.scene, this.theme);
-    await this.backdrop.ready;
-    onProgress(0.55);
-    await buildTerrain(this.scene, this.world, this.theme);
-    await this.buildProps();
-    onProgress(0.8);
     this.blood = new Blood(this.world, this.scene, this.bloodScene);
     this.blood.livingBonus = false;
     this.blood.onSpill = (v) => this.onSpill(v);
@@ -103,8 +108,6 @@ export class Game {
     this.checkpoint = { ...L.spawn };
     this.events = L.events.map((e) => ({ ...e, done: false })).sort((a, b) => a.x - b.x);
     for (const e of this.events) if (e.type === 'pickup') { this.spawnPickup(e.x, e.y ?? 0.5, e.kind, true); e.done = true; }
-    this.pickupTex = {};
-    for (const k of ['h', 's', 'r', 'grenade', 'health']) this.pickupTex[k] = await loadTexture(PROP_TEX('pickup_' + k));
     this.buildPits();
     // theme lighting
     lightUniforms.ambient.value.set(...this.theme.ambient);
@@ -162,6 +165,11 @@ export class Game {
     const texs = {};
     await Promise.all([...new Set(L.props.map((p) => p.type))].map(async (t) => { texs[t] = await loadTexture(PROP_TEX(t)); }));
     const amb = this.theme.ambient;
+    // Most props repeat. Reuse their quad and immutable material instead of
+    // creating and uploading a new geometry and uniform set for every copy.
+    // Blood tanks retain a private material because breaking one dims its tint.
+    const quad = new THREE.PlaneGeometry(1, 1);
+    const materials = new Map();
     for (const p of L.props) {
       const tex = texs[p.type];
       const img = tex.image;
@@ -170,11 +178,16 @@ export class Game {
       const back = p.layer === 'back';
       const k = (back ? 1.05 : 0.9) * (p.tint ?? 1);
       const scenery = back && !p.hp && !p.explosive;
-      const mat = makeEnvMaterial(tex, { tint: [amb[0] * k, amb[1] * k, amb[2] * k], lightInfluence: 0.55, emissiveBoost: 0.3, highlightCompression: scenery ? 0.7 : 0, backgroundDim: scenery ? 0.68 : 1 });
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+      const key = p.blood ? null : `${p.type}|${back}|${k}|${scenery}`;
+      let mat = key === null ? null : materials.get(key);
+      if (!mat) {
+        mat = makeEnvMaterial(tex, { tint: [amb[0] * k, amb[1] * k, amb[2] * k], lightInfluence: 0.55, emissiveBoost: 0.3, highlightCompression: scenery ? 0.7 : 0, backgroundDim: scenery ? 0.68 : 1 });
+        if (key !== null) materials.set(key, mat);
+      }
+      const mesh = new THREE.Mesh(quad, mat);
       const sink = p.hang ? 0 : back ? 0.18 : 0.08;
       mesh.position.set(p.x, p.y + h / 2 - sink, 0);
-      if (p.flip) mesh.scale.x = -1;
+      mesh.scale.set(p.flip ? -w : w, h, 1);
       // back props render before the ground's top lip so the lip overlaps and grounds their base
       mesh.renderOrder = back ? (p.y > 0.05 ? 33 : 29.5) : 90;
       mesh.frustumCulled = false;
@@ -907,6 +920,7 @@ export class Game {
     for (const d of Object.values(this.defs)) d.batch.begin();
     this.droneAssets.batch.begin();
     const x0 = c.cx - c.viewW / 2 - 3, x1 = c.cx + c.viewW / 2 + 3;
+    updateShadowOccluders(this.props, x0, x1);
     for (const e of this.enemies) updateProjectedShadow(e, this.world, x0, x1);
     updateProjectedShadow(this.boss, this.world, x0, x1);
     updateProjectedShadow(this.player, this.world, x0, x1);

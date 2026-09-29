@@ -42,7 +42,11 @@ export class IntroScene {
     const fx = this.app.pipeline.fx;
     fx.lift.value.set(0.015, 0.0, 0.01); fx.gain.value.set(1.03, 0.98, 0.96); fx.saturation.value = 1.0; fx.exposure.value = 1.0;
     fx.bloomStrength.value = 0.5; fx.vignette.value = 0.85; fx.grain.value = 0.06; fx.frenzy.value = 0; fx.damage.value = 0;
-    this.ready.then(() => { this.started = true; audio.playMusic('intro', { fade: 0.5, restart: true }); });
+    Promise.all([this.ready, audio.preload([], PANELS.map((p) => p.voice))]).then(() => {
+      if (this.done) return;
+      this.started = true;
+      audio.playMusic('intro', { fade: 0.5, restart: true });
+    });
     setTimeout(() => this.el.classList.add('in'), 30);
   }
   exit() {

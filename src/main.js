@@ -4,10 +4,8 @@ import { Input } from './core/input.js';
 import { Loop } from './core/loop.js';
 import { audio } from './core/audio.js';
 import { settings, saveSettings, records, saveRecords } from './core/settings.js';
-import { Game } from './game/game.js';
 import { STAGE_ORDER } from './game/levels.js';
 import { Menus } from './ui/menus.js';
-import { IntroScene } from './scenes/intro.js';
 import { TitleScene } from './scenes/title.js';
 import { Bot } from './dev/bot.js';
 import { TouchControls } from './ui/touch.js';
@@ -45,12 +43,18 @@ class App {
     this.loop.start();
     // straight to the menu: audio unlocks on the first input (browser autoplay rules)
     audio.init().then(() => {
-      audio.preloadSfx();
-      if (!this.game && this.scene instanceof TitleScene) audio.playMusic('title', { fade: 1.5 });
+      const title = this.scene;
+      if (title instanceof TitleScene) title.ready.then(() => {
+        if (this.scene === title && audio.ctx?.state === 'running') audio.playMusic('title', { fade: 1.5 });
+      });
     });
     const unlock = () => {
       audio.resume();
-      if (!this.game && this.scene instanceof TitleScene && !audio.music) audio.playMusic('title', { fade: 1.5 });
+      // A tap on CAMPAIGN is also an audio-unlock gesture. Let its action run
+      // before deciding whether title music should use the connection.
+      setTimeout(() => {
+        if (!this.game && this.scene instanceof TitleScene && !audio.music) audio.playMusic('title', { fade: 1.5 });
+      }, 350);
       window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock);
     };
     window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
@@ -71,8 +75,9 @@ class App {
     if (s && s.enter) s.enter();
   }
 
-  toIntro() {
+  async toIntro() {
     this.menus.clear();
+    const { IntroScene } = await import('./scenes/intro.js');
     this.setScene(new IntroScene(this, () => { settings.seenIntro = true; saveSettings(); this.toTitle(); }));
   }
 
@@ -82,9 +87,27 @@ class App {
     this.setScene(new TitleScene(this));
     this.menus.title();
     audio.playMusic('title', { fade: 2 });
+    this.warmTitleAssets(this.scene);
+  }
+
+  async warmTitleAssets(title) {
+    await title.ready;
+    await new Promise(requestAnimationFrame); // let the finished title paint first
+    const active = () => this.scene === title && !this.game;
+    if (!active()) return;
+    // Parse game code and fill the texture cache while the player uses the menu.
+    void import('./game/game.js');
+    const { prefetchMenuAssets } = await import('./game/prefetch.js');
+    if (!active()) return;
+    void prefetchMenuAssets(active);
+    void audio.preload(
+      ['rifle', 'enemy_shot', 'enemy_death', 'enemy_pain', 'jump', 'dash', 'slash', 'splat', 'ui_select'],
+      ['mission_start', 'mission_complete', 'checkpoint'],
+    );
   }
 
   endGame() {
+    this.stageLoadToken = null;
     if (this.game) { this.game.destroy(); this.game = null; }
     this.paused = false;
     document.body.classList.remove('paused');
@@ -92,13 +115,20 @@ class App {
 
   async startStage(stage, carry) {
     this.endGame();
+    const token = this.stageLoadToken = {};
     this.menus.clear();
     this.menus.loading(true);
     this.setScene(null);
     audio.stopMusic(0.8);
+    const { Game } = await import('./game/game.js');
+    if (this.stageLoadToken !== token) return;
     const g = new Game(this, { stage, carry });
     this.game = g;
-    await g.load((p) => this.menus.loading(true, p));
+    const essentialAudio = audio.preload(
+      ['rifle', 'enemy_shot', 'enemy_death', 'enemy_pain', 'jump', 'dash', 'slash', 'splat'],
+      ['mission_start'],
+    );
+    await Promise.all([g.load((p) => this.menus.loading(true, p)), essentialAudio]);
     if (this.game !== g) return;
     g.cam.resize(this.pipeline.width / this.pipeline.height);
     // let the first real frames (GPU uploads, first HUD layout) happen behind the loading screen

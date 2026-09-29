@@ -1,6 +1,7 @@
 // Title logo rendered in WebGL with procedural, viscous blood dripping from the letters.
 import * as THREE from 'three';
 import { loadTexture } from '../core/assets.js';
+import { EDGE, COLOR } from './logo_edges.js';
 
 const N = 256; // drip columns
 
@@ -113,62 +114,24 @@ export class BloodLogo {
     this.mesh.frustumCulled = false;
     this.mesh.visible = false;
     scene.add(this.mesh);
-    loadTexture('assets/ui/logo_clean.webp', { mipmaps: true }).then((t) => { this.mat.uniforms.tLogo.value = t; this.buildEdges(t.image); });
+    this.ready = loadTexture('assets/ui/logo_clean.webp', { mipmaps: true }).then((t) => { this.mat.uniforms.tLogo.value = t; this.installEdges(); });
     this.t = 0;
   }
-  buildEdges(img) {
-    const cv = document.createElement('canvas');
-    cv.width = img.width; cv.height = img.height;
-    const cx = cv.getContext('2d');
-    cx.drawImage(img, 0, 0);
-    const d = cx.getImageData(0, 0, img.width, img.height).data;
-    const data = new Uint8Array(N * 4);
-    for (let c = 0; c < N; c++) {
-      const x0 = Math.floor((c / N) * img.width), x1 = Math.floor(((c + 1) / N) * img.width);
-      let lowest = -1, red = 0;
-      for (let x = x0; x < x1; x++) {
-        for (let y = img.height - 1; y >= 0; y--) {
-          const i = (y * img.width + x) * 4;
-          if (d[i + 3] > 200) { if (y > lowest) { lowest = y; red = (d[i] - Math.max(d[i + 1], d[i + 2])) / 255; } break; }
-        }
-      }
-      data[c * 4] = lowest < 0 ? 0 : Math.round((lowest / img.height) * 255);
-      data[c * 4 + 1] = Math.max(0, Math.min(255, Math.round(red * 255 * 1.5)));
-      // drips come from the lowest points of the lettering (and the painted drips) only
-      data[c * 4 + 2] = lowest > img.height * 0.55 && Math.random() < 0.3 ? 255 : 0;
-    }
-    const colData = new Uint8Array(N * 4);
-    for (let c = 0; c < N; c++) {
-      const x = Math.min(img.width - 1, Math.floor(((c + 0.5) / N) * img.width));
-      const ly = Math.round((data[c * 4] / 255) * img.height);
-      // the most saturated blood pixel near the attachment point (ignores glossy highlights)
-      let best = null, bestSat = -1, n = 0;
-      for (let yy = Math.max(0, ly - 16); yy <= Math.max(0, ly - 2); yy++) {
-        for (let xx = Math.max(0, x - 3); xx <= Math.min(img.width - 1, x + 3); xx++) {
-          const i = (yy * img.width + xx) * 4;
-          if (d[i + 3] < 200) continue;
-          n++;
-          const sat = d[i] - Math.max(d[i + 1], d[i + 2]);
-          if (sat > bestSat) { bestSat = sat; best = [d[i], d[i + 1], d[i + 2]]; }
-        }
-      }
-      const lin = (v) => Math.pow(v / 255, 2.2);
-      const ref = [0.33, 0.004, 0.018]; // rich arterial red, linear
-      const col = best ? best.map(lin) : ref;
-      for (let k = 0; k < 3; k++) colData[c * 4 + k] = Math.round((ref[k] * 0.55 + col[k] * 0.45) * 255);
-      colData[c * 4 + 3] = 255;
-      // only grow drips where the letter bottom is actually painted with blood
-      if (!best || bestSat < 70) data[c * 4 + 2] = 0;
-    }
-    const ctex = new THREE.DataTexture(colData, N, 1, THREE.RGBAFormat);
-    ctex.magFilter = THREE.NearestFilter; ctex.minFilter = THREE.NearestFilter; ctex.needsUpdate = true;
-    this.mat.uniforms.tEdgeCol.value = ctex;
-    const tex = new THREE.DataTexture(data, N, 1, THREE.RGBAFormat);
-    tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter;
-    tex.needsUpdate = true;
-    this.mat.uniforms.tEdge.value = tex;
+  installEdges() {
+    // These two 256-column lookups are baked from the painted logo. No canvas
+    // readback or pixel scan is needed on the first title frame.
+    const texture = (base64) => {
+      const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+      const tex = new THREE.DataTexture(bytes, N, 1, THREE.RGBAFormat);
+      tex.magFilter = THREE.NearestFilter;
+      tex.minFilter = THREE.NearestFilter;
+      tex.needsUpdate = true;
+      return tex;
+    };
+    this.mat.uniforms.tEdge.value = texture(EDGE);
+    this.mat.uniforms.tEdgeCol.value = texture(COLOR);
   }
-  // place over a DOM element (the invisible layout <img>), in the given ortho camera
+  // place over a DOM element (the invisible layout element), in the given ortho camera
   update(dt, el, cam, W, H) {
     this.t += dt;
     const u = this.mat.uniforms;

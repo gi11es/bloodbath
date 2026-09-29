@@ -50,6 +50,12 @@ npm test         # vitest: director, scoring, level generator
 npm run build
 ```
 
+The checked-in phone paintings, compressed fonts, and title-drip lookup are
+precomputed assets. After changing their sources, regenerate them with
+`python3 tools/build_mobile_art.py`, `bash tools/build_fonts.sh`, and
+`python3 tools/build_logo_edges.py`. The menu starts warming the first mission's
+textures and common sounds once the title is visible.
+
 Useful URL parameters: `?stage=stage1|stage2|boss|arena`, `?screen=intro`, `?bot=1` (autoplay), `?god=1`, and `?rigview=1` (rig inspector).
 
 ## Credits

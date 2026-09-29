@@ -3,6 +3,7 @@
 import { ik2, clamp, lerp, easeInOutCubic } from '../core/math.js';
 import { loadJSON, loadTexture } from '../core/assets.js';
 import { makeSpriteMaterial, SpriteBatch } from '../render/sprites.js';
+import { makeProjectedShadowMaterial } from '../render/shadows.js';
 
 // Joint indices of the world-space skeleton.
 export const J = {
@@ -49,7 +50,8 @@ export class CharacterDef {
     def.json = json;
     def.parts = json.parts;
     def.material = makeSpriteMaterial(map, nmap);
-    def.batch = new SpriteBatch(def.material, capacity);
+    def.shadowMaterial = makeProjectedShadowMaterial(map);
+    def.batch = new SpriteBatch(def.material, capacity, def.shadowMaterial);
     const p = def.parts;
     const L = (v) => Math.hypot(v[0], v[1]);
     def.thighLen = L(p.thigh.end);
@@ -135,6 +137,7 @@ export class Rig {
 
   // ------------------------------------------------------------------ drawing
   draw(batch = this.def.batch) {
+    batch.setShadow?.(this.shadowGround ?? 0, this.shadowAlpha ?? 0);
     const d = this.def, P = d.parts, f = this.f, j = this.j;
     const fl = this.flash, sd = this.seed, em = this.emissive;
     const baseTint = this.tint || FRONT_TINT;
@@ -188,6 +191,7 @@ export class Rig {
     if (P.shield && !this.missing.has('shield') && this.shieldPos) {
       drawPart(batch, P.shield, this.shieldPos[0], this.shieldPos[1], this.shieldAng, Math.PI / 2, f, ft, 0, fl, sd, 0);
     }
+    batch.setShadow?.(0, 0);
   }
 
   tankAnchor() {

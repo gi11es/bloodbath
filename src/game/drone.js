@@ -1,17 +1,18 @@
 // Legion "Leech" drone: hovers out of reach, telegraphs, then dive-bombs and bursts into blood.
 import { loadTexture } from '../core/assets.js';
 import { makeSpriteMaterial, SpriteBatch } from '../render/sprites.js';
+import { makeProjectedShadowMaterial } from '../render/shadows.js';
 import { audio } from '../core/audio.js';
 import { clamp, rand, lerp } from '../core/math.js';
 
 let shared = null;
 export async function loadDroneAssets(scene) {
-  if (shared) { scene.add(shared.batch.mesh); return shared; }
+  if (shared) { scene.add(shared.batch.shadowMesh, shared.batch.mesh); return shared; }
   const tex = await loadTexture('assets/chars/drone.webp');
   const material = makeSpriteMaterial(tex, null);
-  const batch = new SpriteBatch(material, 64);
+  const batch = new SpriteBatch(material, 64, makeProjectedShadowMaterial(tex));
   batch.mesh.renderOrder = 53;
-  scene.add(batch.mesh);
+  scene.add(batch.shadowMesh, batch.mesh);
   const aspect = tex.image ? tex.image.width / tex.image.height : 2;
   shared = { batch, w: 1.1, h: 1.1 / aspect };
   return shared;
@@ -120,7 +121,9 @@ export class Drone {
     const g = this.game, b = shared.batch;
     const tilt = this.state === 'dive' ? Math.atan2(this.body.vy, Math.abs(this.body.vx)) * this.f : this.state === 'windup' ? 0.35 * this.f : clamp(this.body.vx * 0.05, -0.3, 0.3) * -1;
     const bob = Math.sin(this.t * 9) * 0.03;
+    b.setShadow(this.shadowGround ?? 0, this.shadowAlpha ?? 0);
     b.add(this.cx, this.cy + bob, tilt, shared.w * this.f, shared.h, [0, 0, 1, 1], [1, 1, 1, 1], 0, this.flash * 0.6, 0.2, this.state === 'windup' ? 0.25 : 0);
+    b.setShadow(0, 0);
     const eyeX = this.cx + this.f * 0.33, eyeY = this.cy + 0.05;
     g.lights.add(eyeX, eyeY, [1, 0.08, 0.05], this.state === 'windup' ? 2.5 : 0.8, 2);
     if (this.state === 'windup' && Math.floor(this.stateT * 14) % 2 === 0) g.fx.once({ x: eyeX, y: eyeY, vx: 0, vy: 0, s0: 0.5, s1: 0, shape: 4, c: [3, 0.4, 0.2], rot: this.t * 4 });

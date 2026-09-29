@@ -173,7 +173,7 @@ export function makeSpriteMaterial(map, nmap, { blending = THREE.NormalBlending 
 
 // Dynamic instanced quads.
 export class SpriteBatch {
-  constructor(material, capacity = 512) {
+  constructor(material, capacity = 512, shadowMaterial = null) {
     this.capacity = capacity;
     const base = new THREE.PlaneGeometry(1, 1);
     const g = new THREE.InstancedBufferGeometry();
@@ -187,13 +187,19 @@ export class SpriteBatch {
       return a;
     };
     this.aA = mk('iA'); this.aB = mk('iB'); this.aUV = mk('iUV'); this.aTint = mk('iTint'); this.aFx = mk('iFx');
+    this.aShadow = shadowMaterial ? mk('iShadow') : null;
     g.instanceCount = 0;
     this.geometry = g;
     this.mesh = new THREE.Mesh(g, material);
     this.mesh.frustumCulled = false;
+    this.shadowMesh = shadowMaterial ? new THREE.Mesh(g, shadowMaterial) : null;
+    if (this.shadowMesh) { this.shadowMesh.renderOrder = 39; this.shadowMesh.frustumCulled = false; }
     this.n = 0;
+    this.shadowGround = 0;
+    this.shadowAlpha = 0;
   }
-  begin() { this.n = 0; }
+  begin() { this.n = 0; this.setShadow(0, 0); }
+  setShadow(ground, alpha) { this.shadowGround = ground; this.shadowAlpha = alpha; }
   // uv = [u, v, w, h]; tint = [r,g,b,a]
   add(x, y, rot, sx, sy, uv, tint, blood = 0, flash = 0, seed = 0, emissive = 0, fade = 0) {
     if (this.n >= this.capacity) return;
@@ -205,10 +211,15 @@ export class SpriteBatch {
     if (tint) { T[i] = tint[0]; T[i + 1] = tint[1]; T[i + 2] = tint[2]; T[i + 3] = tint[3]; }
     else { T[i] = T[i + 1] = T[i + 2] = T[i + 3] = 1; }
     F[i] = blood; F[i + 1] = flash; F[i + 2] = seed; F[i + 3] = emissive;
+    if (this.aShadow) {
+      const S = this.aShadow.array;
+      S[i] = this.shadowGround; S[i + 1] = this.shadowAlpha;
+    }
   }
   end() {
     this.geometry.instanceCount = this.n;
-    for (const a of [this.aA, this.aB, this.aUV, this.aTint, this.aFx]) {
+    for (const a of [this.aA, this.aB, this.aUV, this.aTint, this.aFx, this.aShadow]) {
+      if (!a) continue;
       a.clearUpdateRanges();
       a.addUpdateRange(0, this.n * 4);
       a.needsUpdate = true;

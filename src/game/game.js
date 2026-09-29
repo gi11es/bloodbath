@@ -15,7 +15,7 @@ import { THEMES } from './themes.js';
 import { PICKUP_WEAPON } from './weapons.js';
 import { GameCamera } from '../render/camera.js';
 import { Backdrop } from '../render/backdrop.js';
-import { ContactShadows } from '../render/shadows.js';
+import { updateProjectedShadow } from '../render/shadows.js';
 import { buildTerrain } from '../render/terrain.js';
 import { Particles } from '../render/particles.js';
 import { Lights, lightUniforms, makeEnvMaterial } from '../render/sprites.js';
@@ -64,7 +64,11 @@ export class Game {
     const defs = await Promise.all(names.map((n) => CharacterDef.load(n, n === 'hero' ? 256 : 640)));
     this.defs = Object.fromEntries(names.map((n, i) => [n, defs[i]]));
     const order = { boss: 48, butcher: 50, grunt: 51, leaper: 52, hero: 60 };
-    for (const n of names) { this.defs[n].batch.mesh.renderOrder = order[n]; this.scene.add(this.defs[n].batch.mesh); }
+    for (const n of names) {
+      const batch = this.defs[n].batch;
+      batch.mesh.renderOrder = order[n];
+      this.scene.add(batch.shadowMesh, batch.mesh);
+    }
     this.droneAssets = await loadDroneAssets(this.scene);
     this.droneAssets.batch.mesh.renderOrder = 53;
     onProgress(0.3);
@@ -78,7 +82,6 @@ export class Game {
     await this.backdrop.ready;
     onProgress(0.55);
     await buildTerrain(this.scene, this.world, this.theme);
-    this.shadows = new ContactShadows(this.scene);
     await this.buildProps();
     onProgress(0.8);
     this.blood = new Blood(this.world, this.scene, this.bloodScene);
@@ -901,11 +904,9 @@ export class Game {
     for (const d of Object.values(this.defs)) d.batch.begin();
     this.droneAssets.batch.begin();
     const x0 = c.cx - c.viewW / 2 - 3, x1 = c.cx + c.viewW / 2 + 3;
-    this.shadows.begin();
-    for (const e of this.enemies) this.shadows.add(e, this.world, x0, x1);
-    this.shadows.add(this.boss, this.world, x0, x1);
-    this.shadows.add(this.player, this.world, x0, x1, true);
-    this.shadows.end();
+    for (const e of this.enemies) updateProjectedShadow(e, this.world, x0, x1);
+    updateProjectedShadow(this.boss, this.world, x0, x1);
+    updateProjectedShadow(this.player, this.world, x0, x1);
     // corpses first, then living
     for (const e of this.enemies) if (!e.alive && e.rig && e.x > x0 - 5 && e.x < x1 + 5) e.draw();
     for (const g of this.gibs) if (g.x > x0 && g.x < x1) g.draw(g.def.batch);
@@ -957,8 +958,10 @@ export class Game {
 
   destroy() {
     this.hud.destroy();
-    this.shadows.mesh.material.dispose();
-    this.scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+    for (const d of Object.values(this.defs)) d.shadowMaterial.dispose();
+    const geometries = new Set();
+    this.scene.traverse((o) => { if (o.geometry) geometries.add(o.geometry); });
+    for (const geometry of geometries) geometry.dispose();
     this.bloodScene.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
   }
 }

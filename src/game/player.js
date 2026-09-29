@@ -64,11 +64,11 @@ export class Player {
   get cy() { return this.body.y + (this.slideT > 0 ? 0.45 : 1.0); }
   get frenzyActive() { return this.frenzyT > 0; }
 
-  setWeapon(id) {
+  setWeapon(id, announce = true) {
     this.weapon = WEAPONS[id];
     this.ammo = this.weapon.ammo;
     this.rig.weaponPart = this.weapon.part;
-    if (this.weapon.voice) this.game.announce(this.weapon.name, this.weapon.voice, 'weapon');
+    if (announce && this.weapon.voice) this.game.announce(this.weapon.name, this.weapon.voice, 'weapon');
   }
 
   heal(n) {

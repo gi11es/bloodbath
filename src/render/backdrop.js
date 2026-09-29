@@ -20,6 +20,8 @@ export class Backdrop {
     const mat = makeEnvMaterial(tex, {
       tint: L.tint, fogColor: L.fogColor || [0, 0, 0], fog: L.fog || 0, lightInfluence: L.light ?? 0,
       opacity: L.opacity ?? 1, emissiveBoost: L.glow ?? 0, clampV: !L.sky, topFade: L.topFade ?? 0, bottomFade: L.bottomFade ?? 0,
+      highlightCompression: L.highlightCompression ?? (L.sky ? 0.55 : L.factor < 1 ? 0.75 : 0),
+      backgroundDim: L.backgroundDim ?? (L.sky ? 0.74 : L.factor < 0.25 ? 0.68 : L.factor < 1 ? 0.65 : 0.85),
     });
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
     mesh.frustumCulled = false;

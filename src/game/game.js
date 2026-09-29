@@ -15,6 +15,7 @@ import { THEMES } from './themes.js';
 import { PICKUP_WEAPON } from './weapons.js';
 import { GameCamera } from '../render/camera.js';
 import { Backdrop } from '../render/backdrop.js';
+import { ContactShadows } from '../render/shadows.js';
 import { buildTerrain } from '../render/terrain.js';
 import { Particles } from '../render/particles.js';
 import { Lights, lightUniforms, makeEnvMaterial } from '../render/sprites.js';
@@ -77,6 +78,7 @@ export class Game {
     await this.backdrop.ready;
     onProgress(0.55);
     await buildTerrain(this.scene, this.world, this.theme);
+    this.shadows = new ContactShadows(this.scene);
     await this.buildProps();
     onProgress(0.8);
     this.blood = new Blood(this.world, this.scene, this.bloodScene);
@@ -89,7 +91,7 @@ export class Game {
     this.director = new Director({ mode: settings.difficulty, skill: carry.skill });
     this.score = new Score(carry.score);
     this.player = new Player(this, L.spawn.x, L.spawn.y);
-    if (carry.weapon && carry.weapon !== 'rifle') { this.player.setWeapon(carry.weapon); this.player.ammo = carry.ammo; }
+    if (carry.weapon && carry.weapon !== 'rifle') { this.player.setWeapon(carry.weapon, false); this.player.ammo = carry.ammo; }
     if (carry.grenades !== undefined) this.player.grenades = carry.grenades;
     if (carry.frenzy !== undefined) this.player.frenzy = carry.frenzy;
     this.checkpoint = { ...L.spawn };
@@ -161,7 +163,8 @@ export class Game {
       const h = p.h, w = h * aspect;
       const back = p.layer === 'back';
       const k = (back ? 1.05 : 0.9) * (p.tint ?? 1);
-      const mat = makeEnvMaterial(tex, { tint: [amb[0] * k, amb[1] * k, amb[2] * k], lightInfluence: 0.55, emissiveBoost: 0.3 });
+      const scenery = back && !p.hp && !p.explosive;
+      const mat = makeEnvMaterial(tex, { tint: [amb[0] * k, amb[1] * k, amb[2] * k], lightInfluence: 0.55, emissiveBoost: 0.3, highlightCompression: scenery ? 0.7 : 0, backgroundDim: scenery ? 0.68 : 1 });
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
       const sink = p.hang ? 0 : back ? 0.18 : 0.08;
       mesh.position.set(p.x, p.y + h / 2 - sink, 0);
@@ -898,6 +901,11 @@ export class Game {
     for (const d of Object.values(this.defs)) d.batch.begin();
     this.droneAssets.batch.begin();
     const x0 = c.cx - c.viewW / 2 - 3, x1 = c.cx + c.viewW / 2 + 3;
+    this.shadows.begin();
+    for (const e of this.enemies) this.shadows.add(e, this.world, x0, x1);
+    this.shadows.add(this.boss, this.world, x0, x1);
+    this.shadows.add(this.player, this.world, x0, x1);
+    this.shadows.end();
     // corpses first, then living
     for (const e of this.enemies) if (!e.alive && e.rig && e.x > x0 - 5 && e.x < x1 + 5) e.draw();
     for (const g of this.gibs) if (g.x > x0 && g.x < x1) g.draw(g.def.batch);
@@ -949,6 +957,7 @@ export class Game {
 
   destroy() {
     this.hud.destroy();
+    this.shadows.mesh.material.dispose();
     this.scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
     this.bloodScene.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
   }

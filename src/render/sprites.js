@@ -245,6 +245,8 @@ uniform float opacity;
 uniform float bottomFade;
 uniform float topFade;
 uniform float emissiveBoost;
+uniform float highlightCompression;
+uniform float backgroundDim;
 uniform float clampV;
 varying vec2 vUv;
 varying vec2 vWorld;
@@ -265,6 +267,10 @@ void main() {
   col = mix(col, fogColor, fog);
   // soft-saturate the light so bright paint near a fire glows instead of clipping to white
   if (lightInfluence > 0.0) { vec3 pl = pointLights(vWorld, vec3(0.0, 0.0, 1.0)) * lightInfluence; col += tex.rgb * pl / (1.0 + pl * 0.6); }
+  col *= backgroundDim;
+  // Keep bright scenery behind the actors without flattening its darker painted detail.
+  float excess = max(dot(col, vec3(0.2126, 0.7152, 0.0722)) - 0.28, 0.0);
+  col /= 1.0 + highlightCompression * excess * 1.8;
   gl_FragColor = vec4(col, a);
 }`;
 
@@ -292,6 +298,8 @@ export function makeEnvMaterial(map, opts = {}) {
       bottomFade: { value: opts.bottomFade ?? 0 },
       topFade: { value: opts.topFade ?? 0 },
       emissiveBoost: { value: opts.emissiveBoost ?? 0 },
+      highlightCompression: { value: opts.highlightCompression ?? 0 },
+      backgroundDim: { value: opts.backgroundDim ?? 1 },
       clampV: { value: opts.clampV ? 1 : 0 },
     },
   });

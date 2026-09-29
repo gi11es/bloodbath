@@ -96,8 +96,12 @@ precision highp float;
 varying float vV;
 varying float vFresh;
 void main() {
-  float d = 1.7 * smoothstep(1.0, 0.55, vV);
-  gl_FragColor = vec4(d, d * vFresh, 0.0, 1.0);
+  // A thin, shaded film on the floor. Both edges fade into the painted stone.
+  if (vFresh < 0.01) discard;
+  float coverage = smoothstep(0.01, 0.29, vFresh);
+  float edge = smoothstep(0.0, 0.28, vV) * (1.0 - smoothstep(0.72, 1.0, vV));
+  vec3 color = mix(vec3(0.10, 0.008, 0.013), vec3(0.30, 0.006, 0.018), vFresh);
+  gl_FragColor = vec4(color, coverage * edge * 0.82);
 }`;
 const POOL_VERT = /* glsl */ `
 attribute float v;
@@ -123,7 +127,7 @@ function instGeom(capacity, attrs) {
   return { g, attrs: out };
 }
 
-class Pool {
+export class Pool {
   constructor(surface) {
     this.s = surface;
     this.n = Math.max(2, Math.ceil((surface.x1 - surface.x0) / POOL_CELL));
@@ -177,7 +181,7 @@ class Pool {
       total += V[i];
     }
     this.total = total;
-    if (total < 0.0005) this.active = false;
+    if (total < 0.0005) { this.active = false; this.mesh.visible = false; }
   }
   rebuild() {
     const n = this.n, pos = this.geom.attributes.position.array, fr = this.geom.attributes.fresh.array;
@@ -185,10 +189,11 @@ class Pool {
     for (let i = 0; i < n; i++) {
       const x = Math.min(this.s.x1, this.s.x0 + (i + 0.5) * POOL_CELL);
       const vol = this.vol[i];
-      const h = vol > 0.006 ? 0.012 + this.heightOf(vol) : 0;
+      const wet = vol > 0.006;
+      const h = wet ? 0.012 + this.heightOf(vol) : 0;
       pos[i * 6] = x; pos[i * 6 + 1] = y - 0.035; pos[i * 6 + 2] = 0;
-      pos[i * 6 + 3] = x; pos[i * 6 + 4] = y + h - 0.02; pos[i * 6 + 5] = 0;
-      fr[i * 2] = fr[i * 2 + 1] = 0.3 + this.fresh[i] * 0.7;
+      pos[i * 6 + 3] = x; pos[i * 6 + 4] = wet ? y + h - 0.02 : y - 0.035; pos[i * 6 + 5] = 0;
+      fr[i * 2] = fr[i * 2 + 1] = wet ? 0.3 + this.fresh[i] * 0.7 : 0;
     }
     this.geom.attributes.position.needsUpdate = true;
     this.geom.attributes.fresh.needsUpdate = true;
@@ -227,13 +232,16 @@ export class Blood {
     this.stainMesh.renderOrder = 40;
     scene.add(this.stainMesh);
     // pools
-    this.poolMat = new THREE.ShaderMaterial({ vertexShader: POOL_VERT, fragmentShader: POOL_FRAG, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+    this.poolMat = new THREE.ShaderMaterial({ vertexShader: POOL_VERT, fragmentShader: POOL_FRAG, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide });
     this.pools = world.surfaces.map((sf) => {
       const p = new Pool(sf);
       p.mesh = new THREE.Mesh(p.geom, this.poolMat);
       p.mesh.frustumCulled = false;
       p.mesh.visible = false;
-      bloodScene.add(p.mesh);
+      // Pools belong to the world layer, below cover, props, and characters.
+      // The blood fluid render target is composited last and would draw over them.
+      p.mesh.renderOrder = 32.6;
+      scene.add(p.mesh);
       sf.pool = p;
       return p;
     });

@@ -6,7 +6,7 @@ const browser = await chromium.launch({ headless: true, args: ['--use-angle=meta
 const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
-await page.goto('http://localhost:5173/?stage=stage1&seed=3&god=1');
+await page.goto('http://localhost:5173/?stage=stage1&seed=3&god=1' + (process.argv.includes('--pool') ? '#pool' : '') + (process.argv.includes('--aim') ? '#aim' : ''));
 await page.waitForSelector('#game canvas');
 await page.mouse.click(800, 450);
 await page.waitForTimeout(3000);
@@ -24,6 +24,8 @@ const scene = await page.evaluate(() => {
   const grunt = g.spawnEnemy('grunt', bag.x + 2.6, bag.y);
   grunt.body.grounded = true; grunt.body.vx = 0; grunt.body.vy = 0;
   grunt.think = () => {};
+  if (location.hash.includes('aim')) { grunt.state = 'aim'; grunt.laser = 0.9; grunt.aim = Math.PI; }
+  if (location.hash === '#pool') g.blood.addPool(bag.x + 0.25, bag.y, 0.5);
   g.cam.snap(bag.x + 1.2, 3);
   g.render(0);
   return { bag: { x: bag.x, y: bag.y, h: bag.h, w: bag.w, order: bag.mesh.renderOrder },
@@ -31,7 +33,7 @@ const scene = await page.evaluate(() => {
     hero: [hero.body.x, hero.body.y], grunt: [grunt.body.x, grunt.body.y] };
 });
 await page.screenshot({ path: process.argv[2] || '/tmp/shadow-scene.png' });
-if (process.argv[3]) {
+if (process.argv[3]?.endsWith('.png')) {
   await page.evaluate(() => {
     const g = window.__app.game;
     for (const d of Object.values(g.defs)) d.batch.shadowMesh.visible = false;

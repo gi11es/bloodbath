@@ -39,7 +39,7 @@ function rayCapsule(x0, y0, x1, y1, ax, ay, bx, by) {
 // Legion gun behaviours: range keeping, telegraph length, burst pattern, projectile.
 export const GUNS = {
   rifle: {
-    range: (kn) => lerp(9, 5, kn.aggression), maxDist: 16, tele: 1, gap: 0.16, cool: 1,
+    range: (kn) => lerp(9, 5, kn.aggression), maxDist: 16, tele: 1, gap: 0.16, cool: 1, laser: false,
     burst: (kn) => 1 + Math.round(kn.aggression * 2),
     fire(e, g, m, a, kn) {
       g.projectiles.add({ kind: 'bolt', owner: 'enemy', x: m[0], y: m[1], vx: Math.cos(a) * kn.projectileSpeed, vy: Math.sin(a) * kn.projectileSpeed, dmg: 12, r: 0.12, life: 3 });
@@ -696,15 +696,19 @@ export class Enemy {
       // eyes glow
       const hx = rig.jx(J.head) * 0.6 + rig.jx(J.neck) * 0.4, hy = rig.jy(J.head) * 0.6 + rig.jy(J.neck) * 0.4;
       if (!rig.missing.has('head')) g.lights.add(hx + this.f * 0.08, hy, [1, 0.1, 0.08], 0.5 + this.laser * 1.5, 1.2, 0.3);
-      if (this.state === 'aim' && rig.weaponVisible && GUNS[this.gun || 'rifle']?.laser !== false) {
+      if (this.state === 'aim' && rig.weaponVisible) {
         const m = rig.muzzle();
-        const L = 14;
-        const a = this.aim;
-        const end = g.world.raycast(m[0], m[1], m[0] + Math.cos(a) * L, m[1] + Math.sin(a) * L);
-        const len = end ? end.t * L : L;
-        const alpha = 0.35 + this.laser * 0.65;
-        g.fx.once({ x: m[0] + Math.cos(a) * len / 2, y: m[1] + Math.sin(a) * len / 2, vx: 0, vy: 0, s0: 0.035 + this.laser * 0.03, s1: 0, shape: 1, rot: a, stretch: len / (0.035 + this.laser * 0.03), c: [2.5 * alpha, 0.1, 0.1] });
-        g.fx.once({ x: m[0], y: m[1], vx: 0, vy: 0, s0: 0.2 + this.laser * 0.3, s1: 0, shape: 7, c: [3 * this.laser, 0.3, 0.2] });
+        const charge = this.laser;
+        if (charge > 0.05 && (this.gun === 'rifle' || this.gun === 'sniper')) {
+          g.fx.once({ x: m[0], y: m[1], vx: 0, vy: 0, s0: 0.12 + charge * 0.18, s1: 0, shape: 7, c: [2.5 * charge, 0.25 * charge, 0.18 * charge] });
+        }
+        if (this.gun === 'sniper' && charge > 0.3 && g.player?.alive) {
+          // A target marker warns the player without drawing through the scenery.
+          const a = this.lockedAim ?? this.aim;
+          const L = Math.min(22, Math.hypot(g.player.cx - m[0], g.player.cy - m[1]));
+          const x = m[0] + Math.cos(a) * L, y = m[1] + Math.sin(a) * L;
+          g.fx.once({ x, y, vx: 0, vy: 0, s0: 0.34 + charge * 0.14, s1: 0, shape: 3, c: [1.8 * charge, 0.12, 0.10], a0: 0.6 });
+        }
       }
       if ((this.state === 'crouch' || this.state === 'windup' || this.state === 'chargeWind') && Math.floor(this.stateT * 12) % 2 === 0) {
         g.fx.once({ x: hx, y: hy + 0.5 * this.scale, vx: 0, vy: 0, s0: 0.35, s1: 0, shape: 4, c: [3, 0.6, 0.3], rot: this.t * 3 });

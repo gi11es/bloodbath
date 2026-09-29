@@ -44,13 +44,16 @@ const FRONT_TINT = [1, 1, 1, 1];
 export class CharacterDef {
   static async load(name, capacity = 256) {
     const json = await loadJSON(`assets/chars/${name}.json`);
-    const [map, nmap] = await Promise.all([loadTexture(json.atlas), loadTexture(json.normal, { srgb: false })]);
+    const [map, nmap, shadowMask] = await Promise.all([
+      loadTexture(json.atlas), loadTexture(json.normal, { srgb: false }),
+      loadTexture(`assets/chars/${name}_shadow.png`, { srgb: false }),
+    ]);
     const def = new CharacterDef();
     def.name = name;
     def.json = json;
     def.parts = json.parts;
     def.material = makeSpriteMaterial(map, nmap);
-    def.shadowMaterial = makeProjectedShadowMaterial(map);
+    def.shadowMaterial = makeProjectedShadowMaterial(shadowMask);
     def.batch = new SpriteBatch(def.material, capacity, def.shadowMaterial);
     const p = def.parts;
     const L = (v) => Math.hypot(v[0], v[1]);

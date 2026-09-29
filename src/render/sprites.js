@@ -193,7 +193,8 @@ export class SpriteBatch {
     this.mesh = new THREE.Mesh(g, material);
     this.mesh.frustumCulled = false;
     this.shadowMesh = shadowMaterial ? new THREE.Mesh(g, shadowMaterial) : null;
-    if (this.shadowMesh) { this.shadowMesh.renderOrder = 39; this.shadowMesh.frustumCulled = false; }
+    // Above terrain, below every prop and character. Raised scenery must occlude shadows.
+    if (this.shadowMesh) { this.shadowMesh.renderOrder = 32.5; this.shadowMesh.frustumCulled = false; }
     this.n = 0;
     this.shadowGround = 0;
     this.shadowAlpha = 0;

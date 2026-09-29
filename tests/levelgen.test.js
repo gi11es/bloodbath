@@ -21,5 +21,19 @@ describe('level generator', () => {
       expect(L.events.some((e) => e.type === 'end')).toBe(true);
       expect(L.props.length / L.length).toBeGreaterThan(0.25);
     });
+    it(`${stage}: raised cover and crates stand fully on their ledges`, () => {
+      const aspect = { sandbags: 1154 / 349, s1_fence: 1132 / 356, s2_pews: 1200 / 331, crate: 935 / 599 };
+      for (let seed = 1; seed <= 300; seed++) {
+        const L = generateStage(stage, seed);
+        for (const p of L.props.filter((p) => p.y > 0 && (p.layer === 'front' || p.type === 'crate'))) {
+          const halfW = p.h * aspect[p.type] / 2;
+          const supported = L.solids.some((s) => Math.abs(s.y + s.h - p.y) < 0.01 &&
+            p.x - halfW >= s.x - 0.05 && p.x + halfW <= s.x + s.w + 0.05) ||
+            L.platforms.some((s) => Math.abs(s.y - p.y) < 0.01 &&
+              p.x - halfW >= s.x - 0.05 && p.x + halfW <= s.x + s.w + 0.05);
+          if (!supported) throw new Error(`${stage} seed ${seed}: unsupported ${p.type} at ${p.x}, ${p.y}`);
+        }
+      }
+    });
   }
 });

@@ -8,9 +8,12 @@ import { clamp, rand, lerp } from '../core/math.js';
 let shared = null;
 export async function loadDroneAssets(scene) {
   if (shared) { scene.add(shared.batch.shadowMesh, shared.batch.mesh); return shared; }
-  const tex = await loadTexture('assets/chars/drone.webp');
+  const [tex, shadowMask] = await Promise.all([
+    loadTexture('assets/chars/drone.webp'),
+    loadTexture('assets/chars/drone_shadow.png', { srgb: false }),
+  ]);
   const material = makeSpriteMaterial(tex, null);
-  const batch = new SpriteBatch(material, 64, makeProjectedShadowMaterial(tex));
+  const batch = new SpriteBatch(material, 64, makeProjectedShadowMaterial(shadowMask));
   batch.mesh.renderOrder = 53;
   scene.add(batch.shadowMesh, batch.mesh);
   const aspect = tex.image ? tex.image.width / tex.image.height : 2;

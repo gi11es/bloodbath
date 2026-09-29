@@ -3,12 +3,10 @@ import * as THREE from 'three';
 // The shadow mesh shares each character batch's instance data. Its vertex shader
 // projects the exact animated cutout onto the ground, with a low, oblique cast.
 // This adds one draw call per atlas, no second rig pass or shadow map.
-export function makeProjectedShadowMaterial(map) {
-  const w = map.image?.width || 1024, h = map.image?.height || 1024;
+export function makeProjectedShadowMaterial(mask) {
   return new THREE.ShaderMaterial({
     uniforms: {
-      map: { value: map },
-      texel: { value: new THREE.Vector2(1 / w, 1 / h) },
+      mask: { value: mask },
       castSlope: { value: new THREE.Vector2(0.5, 0.28) },
     },
     vertexShader: `
@@ -27,9 +25,9 @@ export function makeProjectedShadowMaterial(map) {
         vec2 world = iA.xy + vec2(p.x * c - p.y * s, p.x * s + p.y * c);
         float height = max(0.0, world.y - iShadow.x);
         // Project down across the painted floor, away from the key light.
-        // Clamp depth to the visible floor band as the character jumps.
+        // Keep the cast on the floor top, never down the vertical wall face.
         vec2 castPos = vec2(world.x + height * castSlope.x + 0.08,
-                            iShadow.x - 0.025 - min(height * castSlope.y, 0.46));
+                            iShadow.x - 0.015 - min(height * castSlope.y, 0.22));
         vec2 localUv = vec2(iB.x < 0.0 ? 1.0 - uv.x : uv.x,
                             iB.y < 0.0 ? 1.0 - uv.y : uv.y);
         vUv = iUV.xy + localUv * iUV.zw;
@@ -41,21 +39,17 @@ export function makeProjectedShadowMaterial(map) {
     `,
     fragmentShader: `
       precision mediump float;
-      uniform sampler2D map;
-      uniform vec2 texel;
+      uniform sampler2D mask;
       varying vec2 vUv;
       varying float vOpacity;
       varying float vCastX;
       varying vec2 vSupport;
       void main() {
         if (vOpacity < 0.002 || vCastX < vSupport.x || vCastX > vSupport.y) discard;
-        // Five atlas-alpha taps feather the silhouette without a blur render pass.
-        float a = texture2D(map, vUv).a * 0.36;
-        a += texture2D(map, vUv + vec2(6.0 * texel.x, 0.0)).a * 0.16;
-        a += texture2D(map, vUv - vec2(6.0 * texel.x, 0.0)).a * 0.16;
-        a += texture2D(map, vUv + vec2(0.0, 6.0 * texel.y)).a * 0.16;
-        a += texture2D(map, vUv - vec2(0.0, 6.0 * texel.y)).a * 0.16;
-        gl_FragColor = vec4(0.012, 0.003, 0.008, vOpacity * smoothstep(0.04, 0.75, a));
+        // The precomputed mask closes internal cutout holes and has a broad soft edge.
+        // One texture lookup keeps the shadow cheaper than the old five-tap shader.
+        float a = texture2D(mask, vUv).r;
+        gl_FragColor = vec4(0.012, 0.003, 0.008, vOpacity * a * 0.88);
       }
     `,
     transparent: true,

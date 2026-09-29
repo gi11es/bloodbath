@@ -5,6 +5,7 @@
 import { rng as mulberry } from '../core/math.js';
 
 const GROUND_BOTTOM = -8;
+const FRONT_ASPECT = { sandbags: 1154 / 349, s1_fence: 1132 / 356, s2_pews: 1200 / 331 };
 
 // prop pools per theme: [type, height m, weight, opts]
 const POOLS = {
@@ -81,10 +82,17 @@ function makeBuilder(theme, seed) {
       L.recent.push(type); if (L.recent.length > 3) L.recent.shift();
       if (WIDE.has(type)) x += 2.5;
       const hh = h * L.rand(0.9, 1.1);
-      L.prop(type, x, o?.hang ? y + L.rand(3, 4) : y, hh, 'back', { ...(o || {}) });
+      const halfFoot = type === 'crate' ? hh * (935 / 599) / 2 : 0.3;
+      const propX = y > 0 && !o?.hang ? Math.max(x0 + halfFoot, Math.min(x1 - halfFoot, x)) : x;
+      L.prop(type, propX, o?.hang ? y + L.rand(3, 4) : y, hh, 'back', { ...(o || {}) });
       x += (L.rand(2.3, 4.2) + (WIDE.has(type) ? 3 : 0)) / density;
     }
-    if (L.chance(0.35)) { const [type, h] = weighted(pool.front); L.prop(type, L.rand(x0 + 1, x1 - 1), y, h, 'front'); }
+    if (L.chance(0.35)) {
+      const [type, h] = weighted(pool.front);
+      const halfW = h * (FRONT_ASPECT[type] || 1) / 2;
+      // A broad foreground prop must fit the entire ledge, not just its centre.
+      if (x1 - x0 > halfW * 2 + 0.3) L.prop(type, L.rand(x0 + halfW + 0.15, x1 - halfW - 0.15), y, h, 'front');
+    }
   };
   L.cover = (x, y = 0) => L.prop(pool.cover[0], x, y, pool.cover[1], 'front');
   L.box = (x, y = 0) => L.prop(pool.box[0], x, y, pool.box[1], 'back');
@@ -112,7 +120,11 @@ const CHUNKS = {
     const top = a + 3;
     L.decorate(top, top + 3.5, h2, 0.8);
     L.decorate(x, a, 0, 1);
-    if (L.chance(0.5)) L.cover(a + 1.5, h1);
+    if (L.chance(0.5)) {
+      // The cathedral pew is wider than this first step; use the small reliquary there.
+      if (L.theme === 'stage2') L.box(a + 1.5, h1);
+      else L.cover(a + 1.5, h1);
+    }
     return w;
   },
   platforms(L, x) {
@@ -122,8 +134,9 @@ const CHUNKS = {
     for (let i = 0; i < n; i++) {
       const px = x + 2 + (i * (w - 6)) / Math.max(1, n - 1 || 1) + L.rand(-0.5, 0.5);
       const py = L.pick([2.4, 2.8, 3.2]);
-      L.plat(Math.min(px, x + w - 5.5), py, L.rand(3.5, 5));
-      if (L.chance(0.5)) L.box(px + 1.5, py);
+      const platformX = Math.min(px, x + w - 5.5), platformW = L.rand(3.5, 5);
+      L.plat(platformX, py, platformW);
+      if (L.chance(0.5)) L.box(platformX + platformW / 2, py);
     }
     if (n >= 2 && L.chance(0.5)) L.plat(x + w / 2 - 2, 5.2, 4);
     L.decorate(x, x + w);
@@ -161,8 +174,10 @@ const CHUNKS = {
     const w = L.randi(12, 15);
     L.ground(x, x + w);
     const a = x + L.rand(3, 5);
-    L.block(a, 0, L.rand(4, 6), L.rand(1.0, 1.4));
-    L.cover(a + 0.8, 1.2);
+    const blockW = L.rand(4, 6), blockH = L.rand(1.0, 1.4);
+    L.block(a, 0, blockW, blockH);
+    // Centre the whole sandbag wall on the ledge and use its actual top height.
+    L.cover(a + blockW / 2, blockH);
     L.barrel(a - 1.2);
     L.decorate(x, x + w);
     L.ev('ambush', a - 3, { spawns: [{ type: L.pick(['grunt', 'shotgunner', 'grenadier']), dx: 9 }, { type: 'grunt', dx: 11, delay: 0.6 }, { type: L.pick(['leaper', 'grunt', 'sniper']), dx: -8, delay: 1.3 }] });

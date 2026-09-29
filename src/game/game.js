@@ -76,6 +76,9 @@ export class Game {
     this.seed = this.opts.seed ?? (qs ? Number(qs) : (Math.random() * 2 ** 31) | 0);
     this.level = STAGES[this.stageId](this.seed);
     this.theme = THEMES[this.level.theme];
+    const shadowSlopeX = Math.max(0.18, -(this.theme.rimDir?.[0] ?? -0.55) * 0.9);
+    for (const d of Object.values(this.defs)) d.shadowMaterial.uniforms.castSlope.value.set(shadowSlopeX, 0.28);
+    this.droneAssets.batch.shadowMesh.material.uniforms.castSlope.value.set(shadowSlopeX, 0.28);
     const L = this.level;
     this.world = new World(L.solids, L.platforms, L.bounds);
     this.backdrop = new Backdrop(this.scene, this.theme);

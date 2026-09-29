@@ -197,9 +197,11 @@ export class SpriteBatch {
     this.n = 0;
     this.shadowGround = 0;
     this.shadowAlpha = 0;
+    this.shadowX0 = 0;
+    this.shadowX1 = 0;
   }
-  begin() { this.n = 0; this.setShadow(0, 0); }
-  setShadow(ground, alpha) { this.shadowGround = ground; this.shadowAlpha = alpha; }
+  begin() { this.n = 0; this.setShadow(0, 0, 0, 0); }
+  setShadow(ground, alpha, x0 = 0, x1 = 0) { this.shadowGround = ground; this.shadowAlpha = alpha; this.shadowX0 = x0; this.shadowX1 = x1; }
   // uv = [u, v, w, h]; tint = [r,g,b,a]
   add(x, y, rot, sx, sy, uv, tint, blood = 0, flash = 0, seed = 0, emissive = 0, fade = 0) {
     if (this.n >= this.capacity) return;
@@ -213,7 +215,7 @@ export class SpriteBatch {
     F[i] = blood; F[i + 1] = flash; F[i + 2] = seed; F[i + 3] = emissive;
     if (this.aShadow) {
       const S = this.aShadow.array;
-      S[i] = this.shadowGround; S[i + 1] = this.shadowAlpha;
+      S[i] = this.shadowGround; S[i + 1] = this.shadowAlpha; S[i + 2] = this.shadowX0; S[i + 3] = this.shadowX1;
     }
   }
   end() {

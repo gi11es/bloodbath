@@ -137,7 +137,7 @@ export class Rig {
 
   // ------------------------------------------------------------------ drawing
   draw(batch = this.def.batch) {
-    batch.setShadow?.(this.shadowGround ?? 0, this.shadowAlpha ?? 0);
+    batch.setShadow?.(this.shadowGround ?? 0, this.shadowAlpha ?? 0, this.shadowX0 ?? 0, this.shadowX1 ?? 0);
     const d = this.def, P = d.parts, f = this.f, j = this.j;
     const fl = this.flash, sd = this.seed, em = this.emissive;
     const baseTint = this.tint || FRONT_TINT;

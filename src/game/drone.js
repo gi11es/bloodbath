@@ -121,7 +121,7 @@ export class Drone {
     const g = this.game, b = shared.batch;
     const tilt = this.state === 'dive' ? Math.atan2(this.body.vy, Math.abs(this.body.vx)) * this.f : this.state === 'windup' ? 0.35 * this.f : clamp(this.body.vx * 0.05, -0.3, 0.3) * -1;
     const bob = Math.sin(this.t * 9) * 0.03;
-    b.setShadow(this.shadowGround ?? 0, this.shadowAlpha ?? 0);
+    b.setShadow(this.shadowGround ?? 0, this.shadowAlpha ?? 0, this.shadowX0 ?? 0, this.shadowX1 ?? 0);
     b.add(this.cx, this.cy + bob, tilt, shared.w * this.f, shared.h, [0, 0, 1, 1], [1, 1, 1, 1], 0, this.flash * 0.6, 0.2, this.state === 'windup' ? 0.25 : 0);
     b.setShadow(0, 0);
     const eyeX = this.cx + this.f * 0.33, eyeY = this.cy + 0.05;

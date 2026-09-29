@@ -296,6 +296,9 @@ export class Enemy {
       g.addGib(gib);
       rig.missing.add(name);
     }
+    if (this.hasShield && list.some((name) => name === 'upperarmB' || name === 'forearmB' || name === 'handB')) {
+      this.dropShield(hit);
+    }
     // stump
     const px = j[S.a * 2], py = j[S.a * 2 + 1];
     const along = Math.atan2(j[S.b * 2 + 1] - py, j[S.b * 2] - px);
@@ -339,16 +342,30 @@ export class Enemy {
     g.onGibbed(this);
   }
 
-  breakShield(hit) {
+  dropShield(hit) {
+    if (!this.hasShield) return;
     this.hasShield = false;
     const rig = this.rig;
-    const p = this.def.parts.shield;
-    if (!rig.shieldPos) return;
-    const gib = new Gib(this.def, 'shield', rig.shieldPos[0], rig.shieldPos[1] + 0.3, 0, 0, rig.f, -rig.f * 3, 5, rand(-6, 6), { blood: 0.2, bleed: 0 });
-    this.game.addGib(gib);
     rig.missing.add('shield');
+    const part = this.def.parts.shield;
+    const anchor = rig.shieldPos || [rig.j[J.gripB * 2], rig.j[J.gripB * 2 + 1]];
+    const rotation = (rig.shieldAng ?? Math.PI / 2) - Math.PI / 2;
+    const c = Math.cos(rotation), s = Math.sin(rotation);
+    const cx = part.center[0] * rig.f, cy = part.center[1];
+    const x = anchor[0] + cx * c - cy * s;
+    const y = anchor[1] + cx * s + cy * c;
+    const gib = new Gib(this.def, 'shield', x, y, rotation, 0, rig.f,
+      (hit?.dx || 0) * 2 - rig.f * 1.5 + rand(-0.5, 0.5), 3 + Math.random() * 2,
+      rand(-6, 6), { blood: 0.2, bleed: 0 });
+    this.game.addGib(gib);
+    return [x, y];
+  }
+
+  breakShield(hit) {
+    const pos = this.dropShield(hit);
+    if (!pos) return;
     audio.sfx('glass_break', { vol: 0.6, rate: 0.7 });
-    this.game.fx.debris(rig.shieldPos[0], rig.shieldPos[1] + 0.5, Math.PI / 2, 6, 14, [0.85, 0.82, 0.78]);
+    this.game.fx.debris(pos[0], pos[1], Math.PI / 2, 6, 14, [0.85, 0.82, 0.78]);
     this.setState('stagger', 0.8);
   }
 
@@ -372,6 +389,7 @@ export class Enemy {
     this.state = 'dead';
     this.deadT = 0;
     this.pose(1 / 120);
+    this.dropShield(hit);
     this.dropWeapon(hit);
     const kx = (hit.dx || 0) * (hit.knock || 2) * 1.2 + this.body.vx * 0.5;
     this.ragdoll = new Ragdoll(this.rig, kx, 2 + Math.random() * 2 + (hit.kind === 'explosion' ? 6 : 0), (hit.dx || 0) * -2);

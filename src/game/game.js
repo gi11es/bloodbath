@@ -904,7 +904,7 @@ export class Game {
     this.shadows.begin();
     for (const e of this.enemies) this.shadows.add(e, this.world, x0, x1);
     this.shadows.add(this.boss, this.world, x0, x1);
-    this.shadows.add(this.player, this.world, x0, x1);
+    this.shadows.add(this.player, this.world, x0, x1, true);
     this.shadows.end();
     // corpses first, then living
     for (const e of this.enemies) if (!e.alive && e.rig && e.x > x0 - 5 && e.x < x1 + 5) e.draw();

@@ -23,7 +23,7 @@ export class ContactShadows {
         void main() {
           vUv = uv;
           vAlpha = shadowData.w;
-          vec2 xy = vec2(shadowData.x, shadowData.y) + position.xy * vec2(shadowData.z, 0.38);
+          vec2 xy = vec2(shadowData.x, shadowData.y) + position.xy * vec2(shadowData.z, 0.40);
           gl_Position = projectionMatrix * viewMatrix * vec4(xy, 0.0, 1.0);
         }
       `,
@@ -33,8 +33,13 @@ export class ContactShadows {
         varying float vAlpha;
         void main() {
           vec2 p = vUv * 2.0 - 1.0;
-          float edge = max(0.0, 1.0 - dot(p, p));
-          gl_FragColor = vec4(0.025, 0.005, 0.015, vAlpha * edge * edge);
+          // A broad cast shadow plus a compact, dark contact patch at the feet.
+          // Both live in this one instance so extra actors do not add draw calls.
+          float penumbra = pow(max(0.0, 1.0 - dot(p, p)), 1.35);
+          vec2 contact = vec2((p.x + 0.28) * 1.75, p.y * 1.45);
+          float core = pow(max(0.0, 1.0 - dot(contact, contact)), 1.15);
+          float alpha = vAlpha * min(1.0, 0.65 * penumbra + 0.62 * core);
+          gl_FragColor = vec4(0.018, 0.004, 0.009, alpha);
         }
       `,
       transparent: true,
@@ -49,7 +54,7 @@ export class ContactShadows {
 
   begin() { this.count = 0; }
 
-  add(actor, world, x0, x1) {
+  add(actor, world, x0, x1, hero = false) {
     if (!actor?.alive || this.count >= this.capacity) return;
     const body = actor.body;
     if (!body || body.x < x0 || body.x > x1) return;
@@ -58,12 +63,12 @@ export class ContactShadows {
     const height = Math.max(0, body.y - ground);
     if (height > 9) return;
     const boss = actor.type === 'boss';
-    const width = Math.max(1.3, body.w * (boss ? 2.25 : 2.0)) / (1 + height * 0.13);
-    const opacity = (boss ? 0.58 : actor.type === 'drone' ? 0.3 : 0.5) / (1 + height * 0.55);
+    const width = Math.max(boss ? 3.2 : 1.9, body.w * (boss ? 2.5 : 2.2)) / (1 + height * 0.13);
+    const opacity = (boss ? 0.9 : actor.type === 'drone' ? 0.52 : hero ? 0.92 : 0.82) / (1 + height * 0.55);
     const i = this.count++ * 4;
     const a = this.instances.array;
-    a[i] = body.x;
-    a[i + 1] = ground + 0.09;
+    a[i] = body.x + 0.14 + Math.min(height * 0.12, 0.5);
+    a[i + 1] = ground + 0.12;
     a[i + 2] = width;
     a[i + 3] = opacity;
   }
